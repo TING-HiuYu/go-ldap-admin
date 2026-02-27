@@ -3,45 +3,45 @@
     <el-card class="container-card" shadow="always">
       <el-form size="mini" :inline="true" class="demo-form-inline">
         <el-form-item>
-          <el-button :loading="loading" icon="el-icon-plus" type="warning" @click="create">新增</el-button>
+          <el-button :loading="loading" icon="el-icon-plus" type="warning" @click="create">{{ $t('common.add') }}</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button :disabled="multipleSelection.length === 0" :loading="loading" icon="el-icon-delete" type="danger" @click="batchDelete">批量删除</el-button>
+          <el-button :disabled="multipleSelection.length === 0" :loading="loading" icon="el-icon-delete" type="danger" @click="batchDelete">{{ $t('common.batchDelete') }}</el-button>
         </el-form-item>
       </el-form>
 
       <el-table v-loading="loading" :tree-props="{children: 'children', hasChildren: 'hasChildren'}" row-key="ID" :data="tableData" border stripe style="width: 100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column show-overflow-tooltip prop="title" label="菜单标题" width="150" />
-        <el-table-column show-overflow-tooltip prop="name" label="名称" />
-        <el-table-column show-overflow-tooltip prop="icon" label="图标" />
-        <el-table-column show-overflow-tooltip prop="path" label="路由地址" />
-        <el-table-column show-overflow-tooltip prop="component" label="组件路径" />
-        <el-table-column show-overflow-tooltip prop="redirect" label="重定向" />
-        <el-table-column show-overflow-tooltip prop="sort" label="排序" align="center" width="80" />
-        <el-table-column show-overflow-tooltip prop="status" label="禁用" align="center" width="80">
+        <el-table-column show-overflow-tooltip prop="title" :label="$t('menu.menuTitle')" width="150" />
+        <el-table-column show-overflow-tooltip prop="name" :label="$t('common.name')" />
+        <el-table-column show-overflow-tooltip prop="icon" :label="$t('menu.icon')" />
+        <el-table-column show-overflow-tooltip prop="path" :label="$t('menu.routePath')" />
+        <el-table-column show-overflow-tooltip prop="component" :label="$t('menu.componentPath')" />
+        <el-table-column show-overflow-tooltip prop="redirect" :label="$t('menu.redirect')" />
+        <el-table-column show-overflow-tooltip prop="sort" :label="$t('menu.sort')" align="center" width="80" />
+        <el-table-column show-overflow-tooltip prop="status" :label="$t('common.disabled')" align="center" width="80">
           <template slot-scope="scope">
-            <el-tag size="small" :type="scope.row.status === 1 ? 'success':'danger'">{{ scope.row.status === 1 ? '否':'是' }}</el-tag>
+            <el-tag size="small" :type="scope.row.status === 1 ? 'success':'danger'">{{ scope.row.status === 1 ? $t('common.no'):$t('common.yes') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column show-overflow-tooltip prop="hidden" label="隐藏" align="center" width="80">
+        <el-table-column show-overflow-tooltip prop="hidden" :label="$t('menu.hidden')" align="center" width="80">
           <template slot-scope="scope">
-            <el-tag size="small" :type="scope.row.hidden === 1 ? 'danger':'success'">{{ scope.row.hidden === 1 ? '是':'否' }}</el-tag>
+            <el-tag size="small" :type="scope.row.hidden === 1 ? 'danger':'success'">{{ scope.row.hidden === 1 ? $t('common.yes'):$t('common.no') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column show-overflow-tooltip prop="noCache" label="缓存" align="center" width="80">
+        <el-table-column show-overflow-tooltip prop="noCache" :label="$t('menu.cache')" align="center" width="80">
           <template slot-scope="scope">
-            <el-tag size="small" :type="scope.row.noCache === 1 ? 'danger':'success'">{{ scope.row.noCache === 1 ? '否':'是' }}</el-tag>
+            <el-tag size="small" :type="scope.row.noCache === 1 ? 'danger':'success'">{{ scope.row.noCache === 1 ? $t('common.no'):$t('common.yes') }}</el-tag>
           </template>
         </el-table-column>
-        <!-- <el-table-column show-overflow-tooltip prop="activeMenu" label="高亮菜单" /> -->
-        <el-table-column fixed="right" label="操作" align="center" width="120">
+        <!-- <el-table-column show-overflow-tooltip prop="activeMenu" label="Highlighted menu" /> -->
+        <el-table-column fixed="right" :label="$t('common.actions')" align="center" width="120">
           <template slot-scope="scope">
-            <el-tooltip fixed content="编辑" effect="dark" placement="top">
+            <el-tooltip fixed :content="$t('common.edit')" effect="dark" placement="top">
               <el-button size="mini" icon="el-icon-edit" circle type="primary" @click="update(scope.row)" />
             </el-tooltip>
-            <el-tooltip class="delete-popover" fixed content="删除" effect="dark" placement="top">
-              <el-popconfirm title="确定删除吗？" @onConfirm="singleDelete(scope.row.ID)">
+            <el-tooltip class="delete-popover" fixed :content="$t('common.delete')" effect="dark" placement="top">
+              <el-popconfirm :title="$t('common.confirmDelete')" @onConfirm="singleDelete(scope.row.ID)">
                 <el-button slot="reference" size="mini" icon="el-icon-delete" circle type="danger" />
               </el-popconfirm>
             </el-tooltip>
@@ -51,16 +51,16 @@
 
       <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible" width="580px">
         <el-form ref="dialogForm" :inline="true" size="small" :model="dialogFormData" :rules="dialogFormRules" label-width="80px">
-          <el-form-item label="菜单标题" prop="title">
-            <el-input v-model.trim="dialogFormData.title" placeholder="菜单标题(title)" style="width: 440px" />
+          <el-form-item :label="$t('menu.menuTitle')" prop="title">
+            <el-input v-model.trim="dialogFormData.title" :placeholder="$t('menu.menuTitleLabel')" style="width: 440px" />
           </el-form-item>
-          <el-form-item label="名称" prop="name">
-            <el-input v-model.trim="dialogFormData.name" placeholder="名称(name)" style="width: 220px" />
+          <el-form-item :label="$t('common.name')" prop="name">
+            <el-input v-model.trim="dialogFormData.name" :placeholder="$t('menu.nameLabel')" style="width: 220px" />
           </el-form-item>
-          <el-form-item label="排序" prop="sort">
+          <el-form-item :label="$t('menu.sort')" prop="sort">
             <el-input-number v-model.number="dialogFormData.sort" controls-position="right" :min="1" :max="999" />
           </el-form-item>
-          <el-form-item label="图标" prop="icon">
+          <el-form-item :label="$t('menu.icon')" prop="icon">
             <el-popover
               placement="bottom-start"
               width="450"
@@ -68,43 +68,43 @@
               @show="$refs['iconSelect'].reset()"
             >
               <IconSelect ref="iconSelect" @selected="selected" />
-              <el-input slot="reference" v-model="dialogFormData.icon" style="width: 440px;" placeholder="点击选择图标" readonly>
+              <el-input slot="reference" v-model="dialogFormData.icon" style="width: 440px;" :placeholder="$t('menu.clickToSelectIcon')" readonly>
                 <svg-icon v-if="dialogFormData.icon" slot="prefix" :icon-class="dialogFormData.icon" class="el-input__icon" style="height: 32px;width: 16px;" />
                 <i v-else slot="prefix" class="el-icon-search el-input__icon" />
               </el-input>
             </el-popover>
           </el-form-item>
-          <el-form-item label="路由地址" prop="path">
-            <el-input v-model.trim="dialogFormData.path" placeholder="路由地址(path)" style="width: 440px" />
+          <el-form-item :label="$t('menu.routePath')" prop="path">
+            <el-input v-model.trim="dialogFormData.path" :placeholder="$t('menu.routePathLabel')" style="width: 440px" />
           </el-form-item>
-          <el-form-item label="组件路径" prop="component">
-            <el-input v-model.trim="dialogFormData.component" placeholder="组件路径(component)" style="width: 440px" />
+          <el-form-item :label="$t('menu.componentPath')" prop="component">
+            <el-input v-model.trim="dialogFormData.component" :placeholder="$t('menu.componentPathLabel')" style="width: 440px" />
           </el-form-item>
-          <el-form-item label="重定向" prop="redirect">
-            <el-input v-model.trim="dialogFormData.redirect" placeholder="重定向(redirect)" style="width: 440px" />
+          <el-form-item :label="$t('menu.redirect')" prop="redirect">
+            <el-input v-model.trim="dialogFormData.redirect" :placeholder="$t('menu.redirectLabel')" style="width: 440px" />
           </el-form-item>
-          <el-form-item label="禁用" prop="status">
+          <el-form-item :label="$t('common.disabled')" prop="status">
             <el-radio-group v-model="dialogFormData.status">
-              <el-radio-button label="是" />
-              <el-radio-button label="否" />
+              <el-radio-button label="Yes">{{ $t('common.yes') }}</el-radio-button>
+              <el-radio-button label="No">{{ $t('common.no') }}</el-radio-button>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="隐藏" prop="hidden">
+          <el-form-item :label="$t('menu.hidden')" prop="hidden">
             <el-radio-group v-model="dialogFormData.hidden">
-              <el-radio-button label="是" />
-              <el-radio-button label="否" />
+              <el-radio-button label="Yes">{{ $t('common.yes') }}</el-radio-button>
+              <el-radio-button label="No">{{ $t('common.no') }}</el-radio-button>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="缓存" prop="noCache">
+          <el-form-item :label="$t('menu.cache')" prop="noCache">
             <el-radio-group v-model="dialogFormData.noCache">
-              <el-radio-button label="是" />
-              <el-radio-button label="否" />
+              <el-radio-button label="Yes">{{ $t('common.yes') }}</el-radio-button>
+              <el-radio-button label="No">{{ $t('common.no') }}</el-radio-button>
             </el-radio-group>
           </el-form-item>
-          <!-- <el-form-item label="高亮菜单" prop="activeMenu">
-            <el-input v-model.trim="dialogFormData.activeMenu" placeholder="高亮菜单(activeMenu)" style="width: 440px" />
+          <!-- <el-form-item label="Highlighted menu" prop="activeMenu">
+            <el-input v-model.trim="dialogFormData.activeMenu" placeholder="Highlighted menu(activeMenu)" style="width: 440px" />
           </el-form-item> -->
-          <el-form-item label="上级目录" prop="parentId">
+          <el-form-item :label="$t('menu.parentDirectory')" prop="parentId">
             <!-- <el-cascader
               v-model="dialogFormData.parentId"
               :show-all-levels="false"
@@ -123,8 +123,8 @@
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
-          <el-button size="mini" @click="cancelForm()">取 消</el-button>
-          <el-button size="mini" :loading="submitLoading" type="primary" @click="submitForm()">确 定</el-button>
+          <el-button size="mini" @click="cancelForm()">{{ $t('common.cancel') }}</el-button>
+          <el-button size="mini" :loading="submitLoading" type="primary" @click="submitForm()">{{ $t('common.confirm') }}</el-button>
         </div>
       </el-dialog>
 
@@ -147,15 +147,15 @@ export default {
   },
   data() {
     return {
-      // 表格数据
+      // Table data
       tableData: [],
       loading: false,
 
-      // 上级目录数据
+      // Parent directory data
       treeselectData: [],
       treeselectValue: 0,
 
-      // dialog对话框
+      // Dialog
       submitLoading: false,
       dialogFormTitle: '',
       dialogType: '',
@@ -169,9 +169,9 @@ export default {
         component: 'Layout',
         redirect: '',
         sort: 999,
-        status: '否',
-        hidden: '否',
-        noCache: '是',
+        status: 'No',
+        hidden: 'No',
+        noCache: 'Yes',
         alwaysShow: 2,
         breadcrumb: 1,
         // activeMenu: '',
@@ -179,38 +179,38 @@ export default {
       },
       dialogFormRules: {
         title: [
-          { required: true, message: '请输入标题', trigger: 'blur' },
-          { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+          { required: true, message: this.$t('menu.pleaseEnterTitle'), trigger: 'blur' },
+          { min: 1, max: 50, message: this.$t('common.lengthBetween', {min: 1, max: 50}), trigger: 'blur' }
         ],
         name: [
-          { required: true, message: '请输入名称', trigger: 'blur' },
-          { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
+          { required: true, message: this.$t('menu.pleaseEnterName'), trigger: 'blur' },
+          { min: 1, max: 100, message: this.$t('common.lengthBetween', {min: 1, max: 100}), trigger: 'blur' }
         ],
         path: [
-          { required: true, message: '请输入访问路径', trigger: 'blur' },
-          { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
+          { required: true, message: this.$t('menu.pleaseEnterPath'), trigger: 'blur' },
+          { min: 1, max: 100, message: this.$t('common.lengthBetween', {min: 1, max: 100}), trigger: 'blur' }
         ],
         component: [
-          { required: false, message: '请输入组件路径', trigger: 'blur' },
-          { min: 0, max: 100, message: '长度在 0 到 100 个字符', trigger: 'blur' }
+          { required: false, message: this.$t('menu.pleaseEnterComponentPath'), trigger: 'blur' },
+          { min: 0, max: 100, message: this.$t('common.lengthBetween', {min: 0, max: 100}), trigger: 'blur' }
         ],
         redirect: [
-          { required: false, message: '请输入重定向', trigger: 'blur' },
-          { min: 0, max: 100, message: '长度在 0 到 100 个字符', trigger: 'blur' }
+          { required: false, message: this.$t('menu.pleaseEnterRedirect'), trigger: 'blur' },
+          { min: 0, max: 100, message: this.$t('common.lengthBetween', {min: 0, max: 100}), trigger: 'blur' }
         ],
         // activeMenu: [
-        //   { required: false, message: '请输入高亮菜单', trigger: 'blur' },
-        //   { min: 0, max: 100, message: '长度在 0 到 100 个字符', trigger: 'blur' }
+        //   { required: false, message: 'Please enter highlighted menu', trigger: 'blur' },
+        //   { min: 0, max: 100, message: this.$t('common.lengthBetween', {min: 0, max: 100}), trigger: 'blur' }
         // ],
         parentId: [
-          { required: true, message: '请选择上级目录', trigger: 'change' }
+          { required: true, message: this.$t('menu.pleaseSelectParentDirectory'), trigger: 'change' }
         ]
 
       },
 
-      // 删除按钮弹出框
+      // Delete button popover
       popoverVisible: false,
-      // 表格多选
+      // Table multi-select
       multipleSelection: []
     }
   },
@@ -218,27 +218,27 @@ export default {
     this.getTableData()
   },
   methods: {
-    // 获取表格数据
+    // Get table data
     async getTableData() {
       this.loading = true
       try {
         const { data } = await getMenuTree()
 
         this.tableData = data
-        this.treeselectData = [{ ID: 0, title: '顶级类目', children: data }]
+        this.treeselectData = [{ ID: 0, title: this.$t('menu.topLevel'), children: data }]
       } finally {
         this.loading = false
       }
     },
 
-    // 新增
+    // Create
     create() {
-      this.dialogFormTitle = '新增菜单'
+      this.dialogFormTitle = this.$t('menu.addMenu')
       this.dialogType = 'create'
       this.dialogFormVisible = true
     },
 
-    // 修改
+    // Update
     update(row) {
       this.dialogFormData.ID = row.ID
       this.dialogFormData.title = row.title
@@ -248,29 +248,29 @@ export default {
       this.dialogFormData.component = row.component
       this.dialogFormData.redirect = row.redirect
       this.dialogFormData.sort = row.sort
-      this.dialogFormData.status = row.status === 1 ? '否' : '是'
-      this.dialogFormData.hidden = row.hidden === 1 ? '是' : '否'
-      this.dialogFormData.noCache = row.noCache === 1 ? '否' : '是'
+      this.dialogFormData.status = row.status === 1 ? 'No' : 'Yes'
+      this.dialogFormData.hidden = row.hidden === 1 ? 'Yes' : 'No'
+      this.dialogFormData.noCache = row.noCache === 1 ? 'No' : 'Yes'
       // this.dialogFormData.activeMenu = row.activeMenu
       this.dialogFormData.parentId = row.parentId
 
-      this.dialogFormTitle = '修改菜单'
+      this.dialogFormTitle = this.$t('menu.editMenu')
       this.dialogType = 'update'
       this.dialogFormVisible = true
     },
 
-    // 判断结果
+    // Judge result
     judgeResult(res) {
       if (res.code === 0) {
         Message({
           showClose: true,
-          message: '操作成功',
+          message: this.$t('common.operationSuccessful'),
           type: 'success'
         })
       }
     },
 
-    // 提交表单
+    // Submit form
     submitForm() {
       this.$refs['dialogForm'].validate(async valid => {
         if (valid) {
@@ -278,16 +278,16 @@ export default {
           if (this.dialogFormData.ID === this.dialogFormData.parentId) {
             return Message({
               showClose: true,
-              message: '不能选择自身作为自己的上级目录',
+              message: this.$t('menu.cannotSelectSelfAsParent'),
               type: 'error'
             })
           }
           if (this.dialogFormData.component === '') {
             this.dialogFormData.component = 'Layout'
           }
-          this.dialogFormData.status = this.dialogFormData.status === '是' ? 2 : 1
-          this.dialogFormData.hidden = this.dialogFormData.hidden === '是' ? 1 : 2
-          this.dialogFormData.noCache = this.dialogFormData.noCache === '是' ? 2 : 1
+          this.dialogFormData.status = this.dialogFormData.status === 'Yes' ? 2 : 1
+          this.dialogFormData.hidden = this.dialogFormData.hidden === 'Yes' ? 1 : 2
+          this.dialogFormData.noCache = this.dialogFormData.noCache === 'Yes' ? 2 : 1
           const dialogFormDataCopy = { ...this.dialogFormData, parentId: this.treeselectValue }
           try {
             if (this.dialogType === 'create') {
@@ -307,7 +307,7 @@ export default {
         } else {
           Message({
             showClose: true,
-            message: '表单校验失败',
+            message: this.$t('common.formValidationFailed'),
             type: 'error'
           })
           return false
@@ -315,7 +315,7 @@ export default {
       })
     },
 
-    // 提交表单
+    // Cancel form
     cancelForm() {
       this.resetForm()
     },
@@ -331,21 +331,22 @@ export default {
         component: 'Layout',
         redirect: '',
         sort: 999,
-        status: '否',
-        hidden: '否',
-        noCache: '是',
+        status: 'No',
+        hidden: 'No',
+        noCache: 'Yes',
         alwaysShow: 2,
         breadcrumb: 1,
+        // Highlighted menu
         // activeMenu: '',
         parentId: 0
       }
     },
 
-    // 批量删除
+    // Batch delete
     batchDelete() {
-      this.$confirm('此操作将永久删除, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      this.$confirm(this.$t('common.permanentDeleteWarning'), this.$t('common.notice'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
       }).then(async res => {
         this.loading = true
@@ -364,17 +365,17 @@ export default {
       }).catch(() => {
         Message({
           type: 'info',
-          message: '已取消删除'
+          message: this.$t('common.deleteCancelled')
         })
       })
     },
 
-    // 表格多选
+    // Table multi-select
     handleSelectionChange(val) {
       this.multipleSelection = val
     },
 
-    // 单个删除
+    // Single delete
     async singleDelete(Id) {
       this.loading = true
       try {
@@ -387,7 +388,7 @@ export default {
       this.getTableData()
     },
 
-    // 选中图标
+    // Select icon
     selected(name) {
       this.dialogFormData.icon = name
     },
