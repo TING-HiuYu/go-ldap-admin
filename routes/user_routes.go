@@ -16,14 +16,17 @@ func InitUserRoutes(r *gin.RouterGroup, authMiddleware *jwt.GinJWTMiddleware) gi
 	// 开启casbin鉴权中间件
 	user.Use(middleware.CasbinMiddleware())
 	{
-		user.GET("/info", controller.User.GetUserInfo)                   // 暂时未完成
-		user.GET("/list", controller.User.List)                          // 用户列表
-		user.POST("/add", controller.User.Add)                           // 添加用户
-		user.POST("/update", controller.User.Update)                     // 更新用户
-		user.POST("/delete", controller.User.Delete)                     // 删除用户
-		user.POST("/changePwd", controller.User.ChangePwd)               // 修改用户密码
-		user.POST("/resetPassword", controller.User.ResetPassword)       // 重置用户密码
-		user.POST("/changeUserStatus", controller.User.ChangeUserStatus) // 修改用户状态
+		user.GET("/info", controller.User.GetUserInfo)                             // 暂时未完成
+		user.GET("/list", controller.User.List)                                    // 用户列表
+		user.POST("/add", controller.User.Add)                                     // 添加用户
+		user.POST("/update", controller.User.Update)                               // 更新用户
+		user.POST("/delete", controller.User.Delete)                               // 删除用户
+		user.POST("/changePwd", controller.User.ChangePwd)                         // 修改用户密码
+		user.POST("/password/code", controller.User.SendPasswordChangeCode)        // 发送修改密码验证码
+		user.POST("/issueSSHPubKey", controller.User.IssueSSHPubKey)               // 为当前用户签发SSH证书
+		user.POST("/revokeOriginalKeypair", controller.User.RevokeOriginalKeypair) // 撤销旧SSH证书/密钥（占位）
+		user.POST("/resetPassword", controller.User.ResetPassword)                 // 重置用户密码
+		user.POST("/changeUserStatus", controller.User.ChangeUserStatus)           // 修改用户状态
 
 		user.POST("/syncDingTalkUsers", controller.User.SyncDingTalkUsers) // 同步钉钉用户到平台
 		user.POST("/syncWeComUsers", controller.User.SyncWeComUsers)       // 同步企业微信用户到平台

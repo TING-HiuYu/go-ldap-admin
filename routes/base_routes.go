@@ -52,6 +52,8 @@ func InitBaseRoutes(r *gin.RouterGroup, authMiddleware *jwt.GinJWTMiddleware) gi
 		base.GET("version", controller.Base.GetVersion)       // 获取版本信息
 		// 登录登出刷新token无需鉴权
 		base.POST("/login", authMiddleware.LoginHandler)
+		base.POST("/otp/send", controller.Base.SendLoginCode) // 发送登录验证码
+		base.POST("/otp/login", controller.Base.OtpLogin(authMiddleware))
 		base.POST("/logout", authMiddleware.LogoutHandler)
 		base.POST("/refreshToken", authMiddleware.RefreshHandler)
 		base.POST("/sendcode", controller.Base.SendCode)   // 给用户邮箱发送验证码

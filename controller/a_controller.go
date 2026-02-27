@@ -23,6 +23,7 @@ var (
 	OperationLog  = &OperationLogController{}
 	Base          = &BaseController{}
 	FieldRelation = &FieldRelationController{}
+	OAuth         = &OAuthController{}
 
 	validate = validator.New()
 	trans    ut.Translator

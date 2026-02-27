@@ -1,0 +1,186 @@
+<template>
+  <div :class="classObj" class="app-wrapper">
+    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
+    <sidebar class="sidebar-container" />
+    <div :class="{hasTagsView:needTagsView}" class="main-container">
+      <div :class="{'fixed-header':fixedHeader}">
+        <navbar />
+        <tags-view v-if="needTagsView" />
+      </div>
+      <app-main />
+      <right-panel v-if="showSettings">
+        <settings />
+      </right-panel>
+    </div>
+
+    <!-- 新用户密码提示弹窗 -->
+    <el-dialog
+      title="请记录您的密码"
+      :visible.sync="passwordDialogVisible"
+      width="440px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      append-to-body
+    >
+      <div style="text-align: center; padding: 8px 0;">
+        <p style="margin-bottom: 16px; color: #606266;">系统已为您自动生成登录密码，请妥善保存。关闭此窗口后将无法再次查看。</p>
+        <div style="display: inline-flex; align-items: center; background: #f5f7fa; border: 1px solid #dcdfe6; border-radius: 4px; padding: 10px 16px; gap: 12px;">
+          <span ref="passwordText" style="font-size: 20px; font-family: monospace; letter-spacing: 2px; user-select: all; cursor: text;">{{ generatedPassword }}</span>
+          <el-tooltip :content="copied ? '已复制' : '复制密码'" placement="top" :manual="true" :value="showCopiedTip">
+            <el-button type="primary" icon="el-icon-document-copy" circle size="mini" @click="copyPassword" />
+          </el-tooltip>
+        </div>
+        <p style="margin-top: 12px; color: #909399; font-size: 12px;">您可以使用此密码和用户名进行常规登录</p>
+      </div>
+      <div slot="footer" style="text-align: center;">
+        <el-button size="small" @click="closePasswordDialog">关 闭</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import RightPanel from '@/components/RightPanel' // 这个是设置的icon组件
+import { AppMain, Navbar, Settings, Sidebar, TagsView } from './components'
+import ResizeMixin from './mixin/ResizeHandler'
+import { mapState } from 'vuex'
+
+export default {
+  name: 'Layout',
+  components: {
+    AppMain,
+    Navbar,
+    RightPanel,
+    Settings,
+    Sidebar,
+    TagsView
+  },
+  mixins: [ResizeMixin],
+  data() {
+    return {
+      passwordDialogVisible: false,
+      generatedPassword: '',
+      copied: false,
+      showCopiedTip: false
+    }
+  },
+  computed: {
+    ...mapState({
+      sidebar: state => state.app.sidebar,
+      device: state => state.app.device,
+      showSettings: state => state.settings.showSettings,
+      needTagsView: state => state.settings.tagsView,
+      fixedHeader: state => state.settings.fixedHeader
+    }),
+    classObj() {
+      return {
+        hideSidebar: !this.sidebar.opened,
+        openSidebar: this.sidebar.opened,
+        withoutAnimation: this.sidebar.withoutAnimation,
+        mobile: this.device === 'mobile'
+      }
+    }
+  },
+  mounted() {
+    this.checkGeneratedPassword()
+  },
+  methods: {
+    handleClickOutside() {
+      this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
+    },
+    checkGeneratedPassword() {
+      const pwd = sessionStorage.getItem('generatedPassword')
+      if (pwd) {
+        sessionStorage.removeItem('generatedPassword')
+        this.generatedPassword = pwd
+        this.passwordDialogVisible = true
+      }
+    },
+    copyPassword() {
+      const text = this.generatedPassword
+      if (!text) return
+      const doCopy = (success) => {
+        if (success) {
+          this.copied = true
+          this.showCopiedTip = true
+          this.$message.success('密码已复制到剪贴板')
+          setTimeout(() => {
+            this.copied = false
+            this.showCopiedTip = false
+          }, 2000)
+        } else {
+          this.$message.warning('复制失败，请手动选中复制')
+        }
+      }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => doCopy(true)).catch(() => {
+          doCopy(this.fallbackCopy(text))
+        })
+      } else {
+        doCopy(this.fallbackCopy(text))
+      }
+    },
+    fallbackCopy(text) {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      let ok = false
+      try { ok = document.execCommand('copy') } catch (e) { ok = false }
+      document.body.removeChild(ta)
+      return ok
+    },
+    closePasswordDialog() {
+      this.passwordDialogVisible = false
+      this.generatedPassword = ''
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+  @import "~@/styles/mixin.scss";
+  @import "~@/styles/variables.scss";
+
+  .app-wrapper {
+    @include clearfix;
+    position: relative;
+    height: 100%;
+    width: 100%;
+
+    &.mobile.openSidebar {
+      position: fixed;
+      top: 0;
+    }
+  }
+
+  .drawer-bg {
+    background: #000;
+    opacity: 0.3;
+    width: 100%;
+    top: 0;
+    height: 100%;
+    position: absolute;
+    z-index: 999;
+  }
+
+  .fixed-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 9;
+    width: calc(100% - #{$sideBarWidth});
+    transition: width 0.28s;
+  }
+
+  .hideSidebar .fixed-header {
+    width: calc(100% - 54px)
+  }
+
+  .mobile .fixed-header {
+    width: 100%;
+  }
+</style>

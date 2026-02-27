@@ -21,8 +21,9 @@ type GroupListAllReq struct {
 
 // GroupAddReq 添加资源结构体
 type GroupAddReq struct {
-	GroupType string `json:"groupType" validate:"required,min=1,max=20"`
-	GroupName string `json:"groupName" validate:"required,min=1,max=128"`
+	GroupType  string `json:"groupType" validate:"required,min=1,max=20"`
+	GroupName  string `json:"groupName" validate:"required,min=1,max=128"`
+	GroupClass string `json:"groupClass" validate:"omitempty,oneof=posixGroup groupOfUniqueNames"`
 	//父级Id 大于等于0 必填
 	ParentId uint   `json:"parentId" validate:"omitempty,min=0"`
 	Remark   string `json:"remark" validate:"min=0,max=128"` // 分组的中文描述

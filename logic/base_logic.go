@@ -13,6 +13,7 @@ import (
 	"github.com/eryajf/go-ldap-admin/service/isql"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type BaseLogic struct{}
@@ -52,14 +53,8 @@ func (l BaseLogic) ChangePwd(c *gin.Context, req any) (data any, rspError any) {
 	if !isql.User.Exist(tools.H{"mail": r.Mail}) {
 		return nil, tools.NewValidatorError(fmt.Errorf("邮箱不存在,请检查邮箱是否正确"))
 	}
-	// 判断验证码是否过期
-	cacheCode, ok := tools.VerificationCodeCache.Get(r.Mail)
-	if !ok {
-		return nil, tools.NewValidatorError(fmt.Errorf("对不起，该验证码已超过5分钟有效期，请重新重新密码"))
-	}
-	// 判断验证码是否正确
-	if cacheCode != r.Code {
-		return nil, tools.NewValidatorError(fmt.Errorf("验证码错误，请检查邮箱中正确的验证码，如果点击多次发送验证码，请用最后一次生成的验证码来验证"))
+	if ok := tools.ValidateVerificationCode(tools.PurposePasswordReset, r.Mail, r.Code, true); !ok {
+		return nil, tools.NewValidatorError(fmt.Errorf("验证码错误或已失效，请重新获取"))
 	}
 
 	user := new(model.User)
@@ -204,6 +199,7 @@ func (l BaseLogic) GetConfig(c *gin.Context, req any) (data any, rspError any) {
 	rsp := &response.BaseConfigRsp{}
 	if config.Conf.Ldap != nil {
 		rsp.LdapEnableSync = config.Conf.Ldap.EnableSync
+		rsp.DefaultLoginShell = config.Conf.Ldap.DefaultLoginShell
 	}
 	if config.Conf.DingTalk != nil {
 		rsp.DingTalkEnableSync = config.Conf.DingTalk.EnableSync
@@ -215,7 +211,56 @@ func (l BaseLogic) GetConfig(c *gin.Context, req any) (data any, rspError any) {
 		rsp.WeComEnableSync = config.Conf.WeCom.EnableSync
 	}
 
+	if rsp.DefaultLoginShell == "" {
+		rsp.DefaultLoginShell = "/bin/bash"
+	}
+
 	return rsp, nil
+}
+
+// SendLoginCode 邮箱验证码登录发送验证码
+func (l BaseLogic) SendLoginCode(c *gin.Context, req any) (data any, rspError any) {
+	r, ok := req.(*request.BaseSendLoginCodeReq)
+	if !ok {
+		return nil, ReqAssertErr
+	}
+	user := new(model.User)
+	if err := isql.User.Find(tools.H{"mail": r.Mail}, user); err != nil {
+		if gorm.ErrRecordNotFound == err {
+			return nil, tools.NewValidatorError(fmt.Errorf("用户不存在"))
+		}
+		return nil, tools.NewMySqlError(fmt.Errorf("查询用户失败: %v", err))
+	}
+	if user.Status != 1 {
+		return nil, tools.NewValidatorError(fmt.Errorf("用户已被禁用，无法登录"))
+	}
+	expireAt, err := tools.SendLoginCode(user.Mail)
+	if err != nil {
+		return nil, tools.NewValidatorError(err)
+	}
+	return gin.H{"expireAt": expireAt.Format("2006-01-02 15:04:05")}, nil
+}
+
+// VerifyOtpLogin 校验邮箱验证码并返回用户
+func (l BaseLogic) VerifyOtpLogin(c *gin.Context, req any) (*model.User, any) {
+	r, ok := req.(*request.BaseOtpLoginReq)
+	if !ok {
+		return nil, ReqAssertErr
+	}
+	user := new(model.User)
+	if err := isql.User.Find(tools.H{"mail": r.Mail}, user); err != nil {
+		if gorm.ErrRecordNotFound == err {
+			return nil, tools.NewValidatorError(fmt.Errorf("用户不存在"))
+		}
+		return nil, tools.NewMySqlError(fmt.Errorf("查询用户失败: %v", err))
+	}
+	if user.Status != 1 {
+		return nil, tools.NewValidatorError(fmt.Errorf("用户已被禁用"))
+	}
+	if ok := tools.ValidateVerificationCode(tools.PurposeLogin, r.Mail, r.Code, true); !ok {
+		return nil, tools.NewValidatorError(fmt.Errorf("验证码错误或已失效"))
+	}
+	return user, nil
 }
 
 // GetVersion 获取版本信息
@@ -227,4 +272,18 @@ func (l BaseLogic) GetVersion(c *gin.Context, req any) (data any, rspError any) 
 	_ = c
 
 	return version.GetVersion(), nil
+}
+
+// ResetUserPassword 为用户生成随机密码并更新到数据库和 LDAP
+func (l BaseLogic) ResetUserPassword(user *model.User) (string, any) {
+	newPass := tools.GenerateRandomPassword()
+	// 更新 LDAP 密码
+	if err := ildap.User.ChangePwd(user.UserDN, "", newPass); err != nil {
+		return "", tools.NewLdapError(fmt.Errorf("重置LDAP密码失败: %v", err))
+	}
+	// 更新数据库密码
+	if err := isql.User.ChangePwd(user.Username, tools.NewGenPasswd(newPass)); err != nil {
+		return "", tools.NewMySqlError(fmt.Errorf("重置数据库密码失败: %v", err))
+	}
+	return newPass, nil
 }

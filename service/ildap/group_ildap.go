@@ -2,6 +2,9 @@ package ildap
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/eryajf/go-ldap-admin/config"
 	"github.com/eryajf/go-ldap-admin/model"
@@ -18,12 +21,18 @@ func (x GroupService) Add(g *model.Group) error { //organizationalUnit
 		g.Remark = g.GroupName
 	}
 	add := ldap.NewAddRequest(g.GroupDN, nil)
+	class := normalizeGroupClass(g.GroupClass)
 	if g.GroupType == "ou" {
 		add.Attribute("objectClass", []string{"organizationalUnit", "top"}) // 如果定义了 groupOfNAmes，那么必须指定member，否则报错如下：object class 'groupOfNames' requires attribute 'member'
-	}
-	if g.GroupType == "cn" {
+	} else if class == "posixGroup" {
+		if g.GidNumber == 0 {
+			return errors.New("posixGroup requires gidNumber")
+		}
+		add.Attribute("objectClass", []string{"posixGroup", "top"})
+		add.Attribute("gidNumber", []string{fmt.Sprintf("%d", g.GidNumber)})
+	} else {
 		add.Attribute("objectClass", []string{"groupOfUniqueNames", "top"})
-		add.Attribute("uniqueMember", []string{config.Conf.Ldap.AdminDN}) // 所以这里创建组的时候，默认将admin加入其中，以免创建时没有人员而报上边的错误
+		add.Attribute("uniqueMember", []string{config.Conf.Ldap.AdminDN}) // 默认将admin加入，避免空成员报错
 	}
 	add.Attribute(g.GroupType, []string{g.GroupName})
 	add.Attribute("description", []string{g.Remark})
@@ -81,36 +90,12 @@ func (x GroupService) Delete(gdn string) error {
 
 // AddUserToGroup 添加用户到分组
 func (x GroupService) AddUserToGroup(dn, udn string) error {
-	//判断dn是否以ou开头
-	if dn[:3] == "ou=" {
-		return errors.New("不能添加用户到OU组织单元")
-	}
-	newmr := ldap.NewModifyRequest(dn, nil)
-	newmr.Add("uniqueMember", []string{udn})
-
-	// 获取 LDAP 连接
-	conn, err := common.GetLDAPConn()
-	defer common.PutLADPConn(conn)
-	if err != nil {
-		return err
-	}
-
-	return conn.Modify(newmr)
+	return errors.New("deprecated signature: use AddUserToGroupWithMeta")
 }
 
 // DelUserFromGroup 将用户从分组删除
 func (x GroupService) RemoveUserFromGroup(gdn, udn string) error {
-	newmr := ldap.NewModifyRequest(gdn, nil)
-	newmr.Delete("uniqueMember", []string{udn})
-
-	// 获取 LDAP 连接
-	conn, err := common.GetLDAPConn()
-	defer common.PutLADPConn(conn)
-	if err != nil {
-		return err
-	}
-
-	return conn.Modify(newmr)
+	return errors.New("deprecated signature: use RemoveUserFromGroupWithMeta")
 }
 
 // DelUserFromGroup 将用户从分组删除
@@ -119,7 +104,7 @@ func (x GroupService) ListGroupDN() (groups []*model.Group, err error) {
 	searchRequest := ldap.NewSearchRequest(
 		config.Conf.Ldap.BaseDN,                                     // This is basedn, we will start searching from this node.
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false, // Here several parameters are respectively scope, derefAliases, sizeLimit, timeLimit,  typesOnly
-		"(|(objectClass=organizationalUnit)(objectClass=groupOfUniqueNames))", // This is Filter for LDAP query
+		"(|(objectClass=organizationalUnit)(objectClass=groupOfUniqueNames)(objectClass=posixGroup))", // This is Filter for LDAP query
 		[]string{"DN"}, // Here are the attributes returned by the query, provided as an array. If empty, all attributes are returned
 		nil,
 	)
@@ -144,4 +129,146 @@ func (x GroupService) ListGroupDN() (groups []*model.Group, err error) {
 		}
 	}
 	return
+}
+
+// AddUserToGroupWithMeta 添加用户到分组，支持posixGroup
+func (x GroupService) AddUserToGroupWithMeta(group *model.Group, user *model.User) error {
+	if group == nil || user == nil {
+		return errors.New("group or user is nil")
+	}
+	if strings.HasPrefix(group.GroupDN, "ou=") {
+		return errors.New("不能添加用户到OU组织单元")
+	}
+	newmr := ldap.NewModifyRequest(group.GroupDN, nil)
+	if normalizeGroupClass(group.GroupClass) == "posixGroup" {
+		newmr.Add("memberUid", []string{user.Username})
+	} else {
+		newmr.Add("uniqueMember", []string{user.UserDN})
+	}
+
+	conn, err := common.GetLDAPConn()
+	defer common.PutLADPConn(conn)
+	if err != nil {
+		return err
+	}
+
+	err = conn.Modify(newmr)
+	if err != nil {
+		if ldapErr, ok := err.(*ldap.Error); ok {
+			if ldapErr.ResultCode == ldap.LDAPResultAttributeOrValueExists {
+				return nil
+			}
+		}
+	}
+	return err
+}
+
+// RemoveUserFromGroupWithMeta 将用户从分组删除，支持posixGroup
+func (x GroupService) RemoveUserFromGroupWithMeta(group *model.Group, user *model.User) error {
+	if group == nil || user == nil {
+		return errors.New("group or user is nil")
+	}
+	newmr := ldap.NewModifyRequest(group.GroupDN, nil)
+	if normalizeGroupClass(group.GroupClass) == "posixGroup" {
+		newmr.Delete("memberUid", []string{user.Username})
+	} else {
+		newmr.Delete("uniqueMember", []string{user.UserDN})
+	}
+
+	conn, err := common.GetLDAPConn()
+	defer common.PutLADPConn(conn)
+	if err != nil {
+		return err
+	}
+
+	return conn.Modify(newmr)
+}
+
+// ListGIDNumbers 返回LDAP中已存在的gidNumber集合
+func (x GroupService) ListGIDNumbers() ([]uint, error) {
+	searchRequest := ldap.NewSearchRequest(
+		config.Conf.Ldap.BaseDN,
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		"(&(objectClass=posixGroup)(gidNumber=*))",
+		[]string{"gidNumber"},
+		nil,
+	)
+
+	conn, err := common.GetLDAPConn()
+	defer common.PutLADPConn(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	sr, err := conn.Search(searchRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	var rst []uint
+	for _, entry := range sr.Entries {
+		val := entry.GetAttributeValue("gidNumber")
+		if val == "" {
+			continue
+		}
+		if num, convErr := strconv.Atoi(val); convErr == nil && num > 0 {
+			rst = append(rst, uint(num))
+		}
+	}
+	return rst, nil
+}
+
+func normalizeGroupClass(cls string) string {
+	if strings.EqualFold(cls, "posixGroup") {
+		return "posixGroup"
+	}
+	return "groupOfUniqueNames"
+}
+
+// RemoveUserFromAllGroups 将用户从所有分组移除，覆盖posixGroup与groupOfUniqueNames
+func (x GroupService) RemoveUserFromAllGroups(user *model.User) error {
+	if user == nil {
+		return errors.New("user is nil")
+	}
+	conn, err := common.GetLDAPConn()
+	if err != nil {
+		return err
+	}
+	defer common.PutLADPConn(conn)
+
+	// 从posixGroup移除 memberUid
+	posixFilter := fmt.Sprintf("(&(objectClass=posixGroup)(memberUid=%s))", ldap.EscapeFilter(user.Username))
+	posixReq := ldap.NewSearchRequest(
+		config.Conf.Ldap.BaseDN,
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		posixFilter,
+		[]string{"dn"},
+		nil,
+	)
+	if sr, searchErr := conn.Search(posixReq); searchErr == nil {
+		for _, entry := range sr.Entries {
+			mr := ldap.NewModifyRequest(entry.DN, nil)
+			mr.Delete("memberUid", []string{user.Username})
+			_ = conn.Modify(mr)
+		}
+	}
+
+	// 从groupOfUniqueNames移除 uniqueMember
+	unFilter := fmt.Sprintf("(&(objectClass=groupOfUniqueNames)(uniqueMember=%s))", ldap.EscapeFilter(user.UserDN))
+	unReq := ldap.NewSearchRequest(
+		config.Conf.Ldap.BaseDN,
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		unFilter,
+		[]string{"dn"},
+		nil,
+	)
+	if sr, searchErr := conn.Search(unReq); searchErr == nil {
+		for _, entry := range sr.Entries {
+			mr := ldap.NewModifyRequest(entry.DN, nil)
+			mr.Delete("uniqueMember", []string{user.UserDN})
+			_ = conn.Modify(mr)
+		}
+	}
+
+	return nil
 }

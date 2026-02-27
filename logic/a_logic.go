@@ -3,6 +3,7 @@ package logic
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/eryajf/go-ldap-admin/config"
 	"github.com/eryajf/go-ldap-admin/model"
@@ -35,8 +36,23 @@ var (
 	json = jsoniter.ConfigCompatibleWithStandardLibrary
 )
 
+const (
+	posixStartNumber = uint(10000)
+)
+
 // CommonAddGroup 标准创建分组
 func CommonAddGroup(group *model.Group) error {
+	ensureGroupClass(group)
+	if group.HomePrefix == "" {
+		group.HomePrefix = fmt.Sprintf("/home/%s", group.GroupName)
+	}
+	if isPosixGroup(group) && group.GidNumber == 0 {
+		gid, err := nextAvailableGID()
+		if err != nil {
+			return err
+		}
+		group.GidNumber = gid
+	}
 	// 先在ldap中创建组
 	err := ildap.Group.Add(group)
 	if err != nil {
@@ -66,6 +82,21 @@ func CommonAddGroup(group *model.Group) error {
 
 // CommonUpdateGroup 标准更新分组
 func CommonUpdateGroup(oldGroup, newGroup *model.Group) error {
+	ensureGroupClass(oldGroup)
+	ensureGroupClass(newGroup)
+	if newGroup.GroupClass == "" {
+		newGroup.GroupClass = oldGroup.GroupClass
+	}
+	if newGroup.GidNumber == 0 {
+		newGroup.GidNumber = oldGroup.GidNumber
+	}
+	if newGroup.HomePrefix == "" {
+		if oldGroup.HomePrefix != "" {
+			newGroup.HomePrefix = oldGroup.HomePrefix
+		} else {
+			newGroup.HomePrefix = fmt.Sprintf("/home/%s", newGroup.GroupName)
+		}
+	}
 	//若配置了不允许修改分组名称，则不更新分组名称
 	if !config.Conf.Ldap.GroupNameModify {
 		newGroup.GroupName = oldGroup.GroupName
@@ -84,6 +115,14 @@ func CommonUpdateGroup(oldGroup, newGroup *model.Group) error {
 
 // CommonAddUser 标准创建用户
 func CommonAddUser(user *model.User, groups []*model.Group) error {
+	var primaryPosix *model.Group
+	for _, g := range groups {
+		ensureGroupClass(g)
+		if primaryPosix == nil && isPosixGroup(g) {
+			primaryPosix = g
+		}
+	}
+
 	// 用户信息的预置处理
 	if user.Nickname == "" {
 		user.Nickname = "佚名"
@@ -117,6 +156,24 @@ func CommonAddUser(user *model.User, groups []*model.Group) error {
 	if user.Mobile == "" {
 		user.Mobile = generateMobile()
 	}
+	if primaryPosix != nil {
+		if user.GidNumber == 0 {
+			user.GidNumber = primaryPosix.GidNumber
+		}
+		if user.UidNumber == 0 {
+			uid, err := nextAvailableUID()
+			if err != nil {
+				return tools.NewOperationError(fmt.Errorf("生成uidNumber失败: %v", err))
+			}
+			user.UidNumber = uid
+		}
+		if user.HomeDirectory == "" {
+			user.HomeDirectory = fmt.Sprintf("/home/%s/%s", primaryPosix.GroupName, user.Username)
+		}
+		if user.LoginShell == "" {
+			user.LoginShell = getDefaultLoginShell()
+		}
+	}
 
 	// 先将用户添加到MySQL
 	err := isql.User.Add(user)
@@ -145,7 +202,7 @@ func CommonAddUser(user *model.User, groups []*model.Group) error {
 			return tools.NewMySqlError(fmt.Errorf("%s", "向MySQL添加用户到分组关系失败："+err.Error()))
 		}
 		//根据选择的部门，添加到部门内
-		err = ildap.Group.AddUserToGroup(group.GroupDN, user.UserDN)
+		err = ildap.Group.AddUserToGroupWithMeta(group, user)
 		if err != nil {
 			return tools.NewMySqlError(fmt.Errorf("%s", "向Ldap添加用户到分组关系失败："+err.Error()))
 		}
@@ -189,7 +246,7 @@ func CommonUpdateUser(oldUser, newUser *model.User, groupId []uint) error {
 			return tools.NewMySqlError(fmt.Errorf("%s", "向MySQL添加用户到分组关系失败："+err.Error()))
 		}
 		//根据选择的部门，添加到部门内
-		err = ildap.Group.AddUserToGroup(group.GroupDN, newUser.UserDN)
+		err = ildap.Group.AddUserToGroupWithMeta(group, newUser)
 		if err != nil {
 			return tools.NewLdapError(fmt.Errorf("%s", "向Ldap添加用户到分组关系失败："+err.Error()))
 		}
@@ -208,7 +265,7 @@ func CommonUpdateUser(oldUser, newUser *model.User, groupId []uint) error {
 		if err != nil {
 			return tools.NewMySqlError(fmt.Errorf("%s", "在MySQL将用户从分组移除失败："+err.Error()))
 		}
-		err = ildap.Group.RemoveUserFromGroup(group.GroupDN, newUser.UserDN)
+		err = ildap.Group.RemoveUserFromGroupWithMeta(group, newUser)
 		if err != nil {
 			return tools.NewMySqlError(fmt.Errorf("%s", "在ldap将用户从分组移除失败："+err.Error()))
 		}
@@ -426,4 +483,96 @@ func generateMobile() string {
 		return generateMobile()
 	}
 	return fmt.Sprintf("%v", randNum)
+}
+
+func nextAvailableUID() (uint, error) {
+	used, err := collectUIDs()
+	if err != nil {
+		return 0, err
+	}
+	return nextAvailableNumber(posixStartNumber, used)
+}
+
+func nextAvailableGID() (uint, error) {
+	used, err := collectGIDs()
+	if err != nil {
+		return 0, err
+	}
+	return nextAvailableNumber(posixStartNumber, used)
+}
+
+func collectUIDs() (map[uint]struct{}, error) {
+	used := make(map[uint]struct{})
+	dbUIDs, err := isql.User.ListUIDNumbers()
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range dbUIDs {
+		if id > 0 {
+			used[id] = struct{}{}
+		}
+	}
+	ldapUIDs, err := ildap.User.ListUIDNumbers()
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range ldapUIDs {
+		if id > 0 {
+			used[id] = struct{}{}
+		}
+	}
+	return used, nil
+}
+
+func collectGIDs() (map[uint]struct{}, error) {
+	used := make(map[uint]struct{})
+	dbGIDs, err := isql.Group.ListGIDNumbers()
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range dbGIDs {
+		if id > 0 {
+			used[id] = struct{}{}
+		}
+	}
+	ldapGIDs, err := ildap.Group.ListGIDNumbers()
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range ldapGIDs {
+		if id > 0 {
+			used[id] = struct{}{}
+		}
+	}
+	return used, nil
+}
+
+func nextAvailableNumber(start uint, used map[uint]struct{}) (uint, error) {
+	const maxGap = uint(100000)
+	for i := start; i < start+maxGap; i++ {
+		if _, ok := used[i]; !ok {
+			return i, nil
+		}
+	}
+	return 0, fmt.Errorf("no available number after %d", start)
+}
+
+func isPosixGroup(group *model.Group) bool {
+	return group != nil && strings.EqualFold(group.GroupClass, "posixGroup")
+}
+
+func ensureGroupClass(group *model.Group) {
+	if group == nil {
+		return
+	}
+	if group.GroupClass == "" {
+		group.GroupClass = "groupOfUniqueNames"
+	}
+}
+
+func getDefaultLoginShell() string {
+	if config.Conf != nil && config.Conf.Ldap != nil && config.Conf.Ldap.DefaultLoginShell != "" {
+		return config.Conf.Ldap.DefaultLoginShell
+	}
+	return "/bin/bash"
 }

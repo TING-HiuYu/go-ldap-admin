@@ -2,6 +2,7 @@ package openldap
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/eryajf/go-ldap-admin/config"
@@ -10,11 +11,14 @@ import (
 )
 
 type Dept struct {
-	DN       string `json:"dn"`
-	Id       string `json:"id"`       // 部门ID
-	Name     string `json:"name"`     // 部门名称拼音
-	Remark   string `json:"remark"`   // 部门中文名
-	ParentId string `json:"parentid"` // 父部门ID
+	DN         string `json:"dn"`
+	Id         string `json:"id"`       // 部门ID
+	Name       string `json:"name"`     // 部门名称拼音
+	Remark     string `json:"remark"`   // 部门中文名
+	ParentId   string `json:"parentid"` // 父部门ID
+	GroupType  string `json:"groupType"`
+	GroupClass string `json:"groupClass"`
+	GidNumber  uint   `json:"gidNumber"`
 }
 
 type User struct {
@@ -31,6 +35,10 @@ type User struct {
 	EmployeeNumber   string   `json:"employeeNumber"`   // 员工工号
 	GivenName        string   `json:"givenName"`        // 给定名字，如果公司有花名，可以用这个字段
 	PostalAddress    string   `json:"postalAddress"`    // 家庭住址
+	UidNumber        uint     `json:"uidNumber"`
+	GidNumber        uint     `json:"gidNumber"`
+	HomeDirectory    string   `json:"homeDirectory"`
+	LoginShell       string   `json:"loginShell"`
 	DepartmentIds    []string `json:"department_ids"`
 }
 
@@ -65,9 +73,29 @@ func GetAllDepts() (ret []*Dept, err error) {
 			}
 			var ele Dept
 			ele.DN = v.DN
-			ele.Name = strings.Split(strings.Split(v.DN, ",")[0], "=")[1]
-			ele.Id = strings.Split(strings.Split(v.DN, ",")[0], "=")[1]
+			rdn := strings.Split(strings.Split(v.DN, ",")[0], "=")
+			if len(rdn) >= 2 {
+				ele.GroupType = rdn[0]
+				ele.Name = rdn[1]
+				ele.Id = rdn[1]
+			}
 			ele.Remark = v.GetAttributeValue("description")
+			classes := v.GetAttributeValues("objectClass")
+			for _, cls := range classes {
+				if strings.EqualFold(cls, "posixGroup") {
+					ele.GroupClass = "posixGroup"
+					break
+				}
+			}
+			if ele.GroupClass == "" {
+				ele.GroupClass = "groupOfUniqueNames"
+			}
+			gidVal := v.GetAttributeValue("gidNumber")
+			if gidVal != "" {
+				if num, convErr := strconv.Atoi(gidVal); convErr == nil && num > 0 {
+					ele.GidNumber = uint(num)
+				}
+			}
 			if len(strings.Split(v.DN, ","))-len(strings.Split(config.Conf.Ldap.BaseDN, ",")) == 1 {
 				ele.ParentId = "0"
 			} else {
@@ -113,6 +141,19 @@ func GetAllUsers() (ret []*User, err error) {
 			if err != nil {
 				return ret, err
 			}
+			uidVal := v.GetAttributeValue("uidNumber")
+			gidVal := v.GetAttributeValue("gidNumber")
+			var uidNum, gidNum uint
+			if uidVal != "" {
+				if num, convErr := strconv.Atoi(uidVal); convErr == nil && num > 0 {
+					uidNum = uint(num)
+				}
+			}
+			if gidVal != "" {
+				if num, convErr := strconv.Atoi(gidVal); convErr == nil && num > 0 {
+					gidNum = uint(num)
+				}
+			}
 			ret = append(ret, &User{
 				Name:             name,
 				DN:               v.DN,
@@ -127,6 +168,10 @@ func GetAllUsers() (ret []*User, err error) {
 				EmployeeNumber:   v.GetAttributeValue("employeeNumber"),
 				GivenName:        v.GetAttributeValue("givenName"),
 				PostalAddress:    v.GetAttributeValue("postalAddress"),
+				UidNumber:        uidNum,
+				GidNumber:        gidNum,
+				HomeDirectory:    v.GetAttributeValue("homeDirectory"),
+				LoginShell:       v.GetAttributeValue("loginShell"),
 				DepartmentIds:    deptIds,
 			})
 		}
@@ -137,10 +182,15 @@ func GetAllUsers() (ret []*User, err error) {
 // GetUserDeptIds 获取用户所在的部门
 func GetUserDeptIds(udn string) (ret []string, err error) {
 	// Construct query request
+	username := ""
+	rdn := strings.Split(strings.Split(udn, ",")[0], "=")
+	if len(rdn) >= 2 {
+		username = rdn[1]
+	}
 	searchRequest := ldap.NewSearchRequest(
 		config.Conf.Ldap.BaseDN,                                     // This is basedn, we will start searching from this node.
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false, // Here several parameters are respectively scope, derefAliases, sizeLimit, timeLimit,  typesOnly
-		fmt.Sprintf("(|(Member=%s)(uniqueMember=%s))", udn, udn), // This is Filter for LDAP query
+		fmt.Sprintf("(|(Member=%s)(uniqueMember=%s)(memberUid=%s))", ldap.EscapeFilter(udn), ldap.EscapeFilter(udn), ldap.EscapeFilter(username)), // This is Filter for LDAP query
 		[]string{}, // Here are the attributes returned by the query, provided as an array. If empty, all attributes are returned
 		nil,
 	)

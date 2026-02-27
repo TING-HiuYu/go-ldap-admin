@@ -1,8 +1,15 @@
 package controller
 
 import (
+	"fmt"
+	"net/http"
+
+	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/eryajf/go-ldap-admin/logic"
 	"github.com/eryajf/go-ldap-admin/model/request"
+	"github.com/eryajf/go-ldap-admin/model/response"
+	"github.com/eryajf/go-ldap-admin/public/tools"
+	"github.com/go-playground/validator/v10"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,6 +46,72 @@ func (m *BaseController) ChangePwd(c *gin.Context) {
 	Run(c, req, func() (any, any) {
 		return logic.Base.ChangePwd(c, req)
 	})
+}
+
+// SendLoginCode 发送登录验证码
+func (m *BaseController) SendLoginCode(c *gin.Context) {
+	req := new(request.BaseSendLoginCodeReq)
+	Run(c, req, func() (any, any) {
+		return logic.Base.SendLoginCode(c, req)
+	})
+}
+
+// OtpLogin 邮箱验证码登录
+func (m *BaseController) OtpLogin(auth *jwt.GinJWTMiddleware) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		req := new(request.BaseOtpLoginReq)
+		if err := c.Bind(req); err != nil {
+			tools.Err(c, tools.NewValidatorError(err), nil)
+			return
+		}
+		if err := validate.Struct(req); err != nil {
+			for _, err := range err.(validator.ValidationErrors) {
+				tools.Err(c, tools.NewValidatorError(fmt.Errorf("%s", err.Translate(trans))), nil)
+				return
+			}
+		}
+		user, err := logic.Base.VerifyOtpLogin(c, req)
+		if err != nil {
+			tools.Err(c, tools.ReloadErr(err), nil)
+			return
+		}
+
+		// 如果是重置密码流程，生成新密码并更新
+		var newPassword string
+		if req.Reset {
+			newPass, resetErr := logic.Base.ResetUserPassword(user)
+			if resetErr != nil {
+				if rspErr, ok := resetErr.(*tools.RspError); ok {
+					tools.Err(c, rspErr, nil)
+				} else {
+					tools.Err(c, tools.NewValidatorError(fmt.Errorf("%v", resetErr)), nil)
+				}
+				return
+			}
+			newPassword = newPass
+		}
+
+		payload := tools.H{"user": tools.Struct2Json(user)}
+		claims := auth.PayloadFunc(payload)
+		token, expires, tokenErr := auth.TokenGenerator(claims)
+		if tokenErr != nil {
+			tools.Err(c, tools.NewValidatorError(tokenErr), nil)
+			return
+		}
+
+		if newPassword != "" {
+			// 重置流程：返回 token + newPassword
+			response.Response(c, http.StatusOK, http.StatusOK,
+				gin.H{
+					"token":       token,
+					"expires":     expires.Format("2006-01-02 15:04:05"),
+					"newPassword": newPassword,
+				},
+				"重置密码成功")
+		} else {
+			auth.LoginResponse(c, http.StatusOK, token, expires)
+		}
+	}
 }
 
 // Dashboard 系统首页展示数据

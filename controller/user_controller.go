@@ -93,6 +93,22 @@ func (m UserController) ChangePwd(c *gin.Context) {
 	})
 }
 
+// SendPasswordChangeCode 发送修改密码验证码
+// @Summary 发送修改密码验证码
+// @Description 给当前登录用户发送修改密码验证码
+// @Tags 用户管理
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} response.ResponseBody
+// @Router /user/password/code [post]
+// @Security ApiKeyAuth
+func (m UserController) SendPasswordChangeCode(c *gin.Context) {
+	req := new(request.UserSendPasswordCodeReq)
+	Run(c, req, func() (any, any) {
+		return logic.User.SendPasswordChangeCode(c, req)
+	})
+}
+
 // ResetPassword 重置用户密码
 // @Summary 重置用户密码
 // @Description 重置用户密码为随机密码并发送邮件通知
@@ -140,6 +156,38 @@ func (uc UserController) GetUserInfo(c *gin.Context) {
 	req := new(request.UserGetUserInfoReq)
 	Run(c, req, func() (any, any) {
 		return logic.User.GetUserInfo(c, req)
+	})
+}
+
+// IssueSSHPubKey 为当前用户签发SSH证书
+// @Summary 为当前用户签发SSH证书
+// @Description 生成新的SSH密钥对并使用配置的CA签发用户证书
+// @Tags 用户管理
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} response.ResponseBody
+// @Router /user/issueSSHPubKey [post]
+// @Security ApiKeyAuth
+func (m UserController) IssueSSHPubKey(c *gin.Context) {
+	req := new(request.UserIssueSSHPubKeyReq)
+	Run(c, req, func() (any, any) {
+		return logic.User.IssueSSHPubKey(c, req)
+	})
+}
+
+// RevokeOriginalKeypair 撤销旧的SSH证书/密钥（占位，暂未实现）
+// @Summary 撤销旧的SSH证书/密钥
+// @Description 预留接口，用于广播或webhook撤销旧证书，暂未实现
+// @Tags 用户管理
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} response.ResponseBody
+// @Router /user/revokeOriginalKeypair [post]
+// @Security ApiKeyAuth
+func (m UserController) RevokeOriginalKeypair(c *gin.Context) {
+	req := new(request.UserRevokeOriginalKeypairReq)
+	Run(c, req, func() (any, any) {
+		return logic.User.RevokeOriginalKeypair(c, req)
 	})
 }
 

@@ -33,6 +33,7 @@ type config struct {
 	RateLimit *RateLimitConfig `mapstructure:"rate-limit" json:"rateLimit"`
 	Ldap      *LdapConfig      `mapstructure:"ldap" json:"ldap"`
 	Email     *EmailConfig     `mapstructure:"email" json:"email"`
+	CA        *CAConfig        `mapstructure:"ca" json:"ca"`
 	DingTalk  *DingTalkConfig  `mapstructure:"dingtalk" json:"dingTalk"`
 	WeCom     *WeComConfig     `mapstructure:"wecom" json:"weCom"`
 	FeiShu    *FeiShuConfig    `mapstructure:"feishu" json:"feiShu"`
@@ -72,6 +73,20 @@ func InitConfig() {
 	// 读取rsa key
 	Conf.System.RSAPublicBytes = pub
 	Conf.System.RSAPrivateBytes = priv
+
+	if Conf.CA == nil {
+		Conf.CA = &CAConfig{}
+	}
+	if Conf.CA.CAPath == "" {
+		Conf.CA.CAPath = "ca.crt"
+	}
+	if Conf.CA.CertificateValidDays <= 0 {
+		Conf.CA.CertificateValidDays = 30
+	}
+	// 保持对旧字段的兼容
+	if Conf.System.CAPath == "" {
+		Conf.System.CAPath = Conf.CA.CAPath
+	}
 
 	// 部分配合通过环境变量加载
 	dbDriver := os.Getenv("DB_DRIVER")
@@ -128,9 +143,16 @@ func InitConfig() {
 	if ldapDefaultEmailSuffix != "" {
 		Conf.Ldap.DefaultEmailSuffix = ldapDefaultEmailSuffix
 	}
+	ldapDefaultLoginShell := os.Getenv("LDAP_DEFAULT_LOGIN_SHELL")
+	if ldapDefaultLoginShell != "" {
+		Conf.Ldap.DefaultLoginShell = ldapDefaultLoginShell
+	}
 	ldapUserPasswordEncryptionType := os.Getenv("LDAP_USER_PASSWORD_ENCRYPTION_TYPE")
 	if ldapUserPasswordEncryptionType != "" {
 		Conf.Ldap.UserPasswordEncryptionType = ldapUserPasswordEncryptionType
+	}
+	if Conf.Ldap.DefaultLoginShell == "" {
+		Conf.Ldap.DefaultLoginShell = "/bin/bash"
 	}
 }
 
@@ -139,8 +161,15 @@ type SystemConfig struct {
 	UrlPathPrefix   string `mapstructure:"url-path-prefix" json:"urlPathPrefix"`
 	Port            int    `mapstructure:"port" json:"port"`
 	InitData        bool   `mapstructure:"init-data" json:"initData"`
+	IssueSSHPubKey  bool   `mapstructure:"issue-ssh-pubkey" json:"issueSshPubkey"`
+	CAPath          string `mapstructure:"ca-path" json:"caPath"`
 	RSAPublicBytes  []byte `mapstructure:"-" json:"-"`
 	RSAPrivateBytes []byte `mapstructure:"-" json:"-"`
+}
+
+type CAConfig struct {
+	CAPath               string `mapstructure:"ca-path" json:"caPath"`
+	CertificateValidDays int    `mapstructure:"certificate-valid-days" json:"certificateValidDays"`
 }
 
 type LogsConfig struct {
@@ -197,6 +226,7 @@ type LdapConfig struct {
 	GroupNameModify            bool   `mapstructure:"group-name-modify" json:"groupNameModify"`
 	UserNameModify             bool   `mapstructure:"user-name-modify" json:"userNameModify"`
 	DefaultEmailSuffix         string `mapstructure:"default-email-suffix" json:"defaultEmailSuffix"`
+	DefaultLoginShell          string `mapstructure:"default-login-shell" json:"defaultLoginShell"`
 	UserPasswordEncryptionType string `mapstructure:"user-password-encryption-type" json:"userPasswordEncryptionType"`
 	EnableSync                 bool   `mapstructure:"enable-sync" json:"enableSync"`
 }

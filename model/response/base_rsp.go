@@ -9,8 +9,9 @@ type DashboardList struct {
 }
 
 type BaseConfigRsp struct {
-	LdapEnableSync     bool `json:"ldapEnableSync"`
-	DingTalkEnableSync bool `json:"dingTalkEnableSync"`
-	FeiShuEnableSync   bool `json:"feiShuEnableSync"`
-	WeComEnableSync    bool `json:"weComEnableSync"`
+	LdapEnableSync     bool   `json:"ldapEnableSync"`
+	DingTalkEnableSync bool   `json:"dingTalkEnableSync"`
+	FeiShuEnableSync   bool   `json:"feiShuEnableSync"`
+	WeComEnableSync    bool   `json:"weComEnableSync"`
+	DefaultLoginShell  string `json:"defaultLoginShell"`
 }
