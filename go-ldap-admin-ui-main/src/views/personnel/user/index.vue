@@ -2,92 +2,92 @@
   <div>
     <el-card class="container-card" shadow="always">
       <el-form size="mini" :inline="true" :model="params" class="demo-form-inline">
-        <el-form-item label="用户名">
-          <el-input v-model.trim="params.username" style="width: 100px;" clearable placeholder="用户名" @keyup.enter.native="search" @clear="search" />
+        <el-form-item :label="$t('user.username')">
+          <el-input v-model.trim="params.username" style="width: 100px;" clearable :placeholder="$t('user.username')" @keyup.enter.native="search" @clear="search" />
         </el-form-item>
-        <el-form-item label="昵称">
-          <el-input v-model.trim="params.nickname" style="width: 100px;" clearable placeholder="昵称" @keyup.enter.native="search" @clear="search" />
+        <el-form-item :label="$t('user.nickname')">
+          <el-input v-model.trim="params.nickname" style="width: 100px;" clearable :placeholder="$t('user.nickname')" @keyup.enter.native="search" @clear="search" />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model.trim="params.status" style="width: 100px;" clearable placeholder="状态" @change="search" @clear="search">
-            <el-option label="正常" value="1" />
-            <el-option label="禁用" value="2" />
+        <el-form-item :label="$t('common.status')">
+          <el-select v-model.trim="params.status" style="width: 100px;" clearable :placeholder="$t('common.status')" @change="search" @clear="search">
+            <el-option :label="$t('common.normal')" value="1" />
+            <el-option :label="$t('common.disabled')" value="2" />
           </el-select>
         </el-form-item>
-        <el-form-item label="同步状态">
-          <el-select v-model.trim="params.syncState" style="width: 100px;" clearable placeholder="同步状态" @change="search" @clear="search">
-            <el-option label="已同步" value="1" />
-            <el-option label="未同步" value="2" />
+        <el-form-item :label="$t('user.syncStatus')">
+          <el-select v-model.trim="params.syncState" style="width: 100px;" clearable :placeholder="$t('user.syncStatus')" @change="search" @clear="search">
+            <el-option :label="$t('user.synced')" value="1" />
+            <el-option :label="$t('user.notSynced')" value="2" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button :loading="loading" icon="el-icon-search" type="primary" @click="search">查询</el-button>
+          <el-button :loading="loading" icon="el-icon-search" type="primary" @click="search">{{ $t('common.search') }}</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button :loading="loading" icon="el-icon-plus" type="warning" @click="create">新增</el-button>
+          <el-button :loading="loading" icon="el-icon-plus" type="warning" @click="create">{{ $t('common.add') }}</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button :disabled="multipleSelection.length === 0" :loading="loading" icon="el-icon-delete" type="danger" @click="batchDelete">批量删除</el-button>
+          <el-button :disabled="multipleSelection.length === 0" :loading="loading" icon="el-icon-delete" type="danger" @click="batchDelete">{{ $t('common.batchDelete') }}</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button :disabled="multipleSelection.length === 0" :loading="loading" icon="el-icon-upload2" type="success" @click="batchSync">批量同步</el-button>
+          <el-button :disabled="multipleSelection.length === 0" :loading="loading" icon="el-icon-upload2" type="success" @click="batchSync">{{ $t('common.batchSync') }}</el-button>
         </el-form-item>
         <br>
         <el-form-item v-if="syncConfig.ldapEnableSync">
-          <el-button :loading="loading" icon="el-icon-download" type="warning" @click="syncOpenLdapUsers">同步原ldap用户信息</el-button>
+          <el-button :loading="loading" icon="el-icon-download" type="warning" @click="syncOpenLdapUsers">{{ $t('user.syncLdapUsers') }}</el-button>
         </el-form-item>
         <el-form-item v-if="syncConfig.dingTalkEnableSync">
-          <el-button :loading="loading" icon="el-icon-download" type="warning" @click="syncDingTalkUsers">同步钉钉用户信息</el-button>
+          <el-button :loading="loading" icon="el-icon-download" type="warning" @click="syncDingTalkUsers">{{ $t('user.syncDingTalkUsers') }}</el-button>
         </el-form-item>
         <el-form-item v-if="syncConfig.feiShuEnableSync">
-          <el-button :loading="loading" icon="el-icon-download" type="warning" @click="syncFeiShuUsers">同步飞书用户信息</el-button>
+          <el-button :loading="loading" icon="el-icon-download" type="warning" @click="syncFeiShuUsers">{{ $t('user.syncFeishuUsers') }}</el-button>
         </el-form-item>
         <el-form-item v-if="syncConfig.weComEnableSync">
-          <el-button :loading="loading" icon="el-icon-download" type="warning" @click="syncWeComUsers">同步企业微信用户信息</el-button>
+          <el-button :loading="loading" icon="el-icon-download" type="warning" @click="syncWeComUsers">{{ $t('user.syncWeComUsers') }}</el-button>
         </el-form-item>
       </el-form>
 
       <el-table v-loading="loading" :data="tableData" border stripe style="width: 100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column show-overflow-tooltip sortable prop="username" label="用户名" />
-        <el-table-column show-overflow-tooltip sortable prop="nickname" label="中文名" />
-        <el-table-column show-overflow-tooltip sortable prop="givenName" label="花名" />
-        <!-- 使用按钮方式展示，以后改成布尔参数比较合适 -->
-        <el-table-column label="状态" align="center">
+        <el-table-column show-overflow-tooltip sortable prop="username" :label="$t('user.username')" />
+        <el-table-column show-overflow-tooltip sortable prop="nickname" :label="$t('user.chineseName')" />
+        <el-table-column show-overflow-tooltip sortable prop="givenName" :label="$t('user.alias')" />
+        <!-- Displayed as switch; consider using boolean parameter in the future -->
+        <el-table-column :label="$t('common.status')" align="center">
           <template slot-scope="scope">
             <el-switch v-model="scope.row.status" :active-value="1" :inactive-value="2" @change="userStateChanged(scope.row)" />
           </template>
         </el-table-column>
-        <!-- <el-table-column show-overflow-tooltip sortable prop="status" label="状态" align="center">
+        <!-- <el-table-column show-overflow-tooltip sortable prop="status" :label="$t('common.status')" align="center">
           <template slot-scope="scope">
-            <el-tag size="small" :type="scope.row.status === 1 ? 'success':'danger'" disable-transitions>{{ scope.row.status === 1 ? '正常':'禁用' }}</el-tag>
+            <el-tag size="small" :type="scope.row.status === 1 ? 'success':'danger'" disable-transitions>{{ scope.row.status === 1 ? $t('common.normal') : $t('common.disabled') }}</el-tag>
           </template>
         </el-table-column> -->
-        <el-table-column show-overflow-tooltip sortable prop="mail" label="邮箱" />
+        <el-table-column show-overflow-tooltip sortable prop="mail" :label="$t('user.email')" />
 
-        <el-table-column show-overflow-tooltip sortable prop="departments" label="部门" />
-        <el-table-column show-overflow-tooltip sortable prop="creator" label="创建人" />
-        <el-table-column show-overflow-tooltip sortable prop="introduction" label="说明" />
+        <el-table-column show-overflow-tooltip sortable prop="departments" :label="$t('user.department')" />
+        <el-table-column show-overflow-tooltip sortable prop="creator" :label="$t('common.creator')" />
+        <el-table-column show-overflow-tooltip sortable prop="introduction" :label="$t('common.remark')" />
         <el-table-column show-overflow-tooltip sortable prop="userDn" label="DN" />
-        <el-table-column show-overflow-tooltip sortable prop="CreatedAt" label="创建时间" />
-        <el-table-column show-overflow-tooltip sortable prop="UpdatedAt" label="更新时间" />
-        <el-table-column fixed="right" label="操作" align="center" width="190">
+        <el-table-column show-overflow-tooltip sortable prop="CreatedAt" :label="$t('common.createdAt')" />
+        <el-table-column show-overflow-tooltip sortable prop="UpdatedAt" :label="$t('common.updatedAt')" />
+        <el-table-column fixed="right" :label="$t('common.actions')" align="center" width="190">
           <template slot-scope="scope">
-            <el-tooltip content="编辑" effect="dark" placement="top">
+            <el-tooltip :content="$t('common.edit')" effect="dark" placement="top">
               <el-button size="mini" icon="el-icon-edit" circle type="primary" @click="update(scope.row)" />
             </el-tooltip>
-            <el-tooltip class="delete-popover" content="重置密码" effect="dark" placement="top">
-              <el-popconfirm title="确定重置该用户密码吗？" @onConfirm="resetUserPassword(scope.row.username)">
+            <el-tooltip class="delete-popover" :content="$t('user.resetPassword')" effect="dark" placement="top">
+              <el-popconfirm :title="$t('user.confirmResetPassword')" @onConfirm="resetUserPassword(scope.row.username)">
                 <el-button slot="reference" size="mini" icon="el-icon-key" circle type="warning" />
               </el-popconfirm>
             </el-tooltip>
-            <el-tooltip class="delete-popover" content="删除" effect="dark" placement="top">
-              <el-popconfirm title="确定删除吗？" @onConfirm="singleDelete(scope.row.ID)">
+            <el-tooltip class="delete-popover" :content="$t('common.delete')" effect="dark" placement="top">
+              <el-popconfirm :title="$t('common.confirmDelete')" @onConfirm="singleDelete(scope.row.ID)">
                 <el-button slot="reference" size="mini" icon="el-icon-delete" circle type="danger" />
               </el-popconfirm>
             </el-tooltip>
-            <el-tooltip v-if="scope.row.syncState == 2" class="delete-popover" content="同步" effect="dark" placement="top">
-              <el-popconfirm title="确定同步吗？" @onConfirm="singleSync(scope.row.ID)">
+            <el-tooltip v-if="scope.row.syncState == 2" class="delete-popover" :content="$t('common.sync')" effect="dark" placement="top">
+              <el-popconfirm :title="$t('common.confirmSync')" @onConfirm="singleSync(scope.row.ID)">
                 <el-button slot="reference" size="mini" icon="el-icon-upload2" circle type="success" />
               </el-popconfirm>
             </el-tooltip>
@@ -111,37 +111,37 @@
         <el-form ref="dialogForm" size="small" :model="dialogFormData" :rules="dialogFormRules" label-width="80px">
           <el-row>
             <el-col :span="12">
-              <el-form-item label="用户名" prop="username">
-                <el-input ref="password" v-model.trim="dialogFormData.username" :disabled="disabled" placeholder="用户名（拼音）" />
+              <el-form-item :label="$t('user.username')" prop="username">
+                <el-input ref="password" v-model.trim="dialogFormData.username" :disabled="disabled" :placeholder="$t('user.usernamePinyin')" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="中文名字" prop="nickname">
-                <el-input v-model.trim="dialogFormData.nickname" placeholder="中文名字" />
+              <el-form-item :label="$t('user.chineseNameFull')" prop="nickname">
+                <el-input v-model.trim="dialogFormData.nickname" :placeholder="$t('user.chineseNameFull')" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="花名" prop="givenName">
-                <el-input v-model.trim="dialogFormData.givenName" placeholder="花名" />
+              <el-form-item :label="$t('user.alias')" prop="givenName">
+                <el-input v-model.trim="dialogFormData.givenName" :placeholder="$t('user.alias')" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="邮箱" prop="mail">
-                <el-input v-model.trim="dialogFormData.mail" placeholder="邮箱" />
+              <el-form-item :label="$t('user.email')" prop="mail">
+                <el-input v-model.trim="dialogFormData.mail" :placeholder="$t('user.email')" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <!-- 修改用户时，不显示密码字段 -->
-              <el-form-item v-if="dialogType === 'create'" :label="dialogType === 'create' ? '新密码':'重置密码'" prop="password">
-                <el-input v-model.trim="dialogFormData.password" autocomplete="off" :type="passwordType" :placeholder="dialogType === 'create' ? '新密码':'重置密码'" />
+              <!-- Hide password field when editing user -->
+              <el-form-item v-if="dialogType === 'create'" :label="dialogType === 'create' ? $t('user.newPassword') : $t('user.resetPassword')" prop="password">
+                <el-input v-model.trim="dialogFormData.password" autocomplete="off" :type="passwordType" :placeholder="dialogType === 'create' ? $t('user.newPassword') : $t('user.resetPassword')" />
                 <span class="show-pwd" @click="showPwd">
                   <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
                 </span>
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="角色" prop="roleIds">
-                <el-select v-model.trim="dialogFormData.roleIds" multiple placeholder="请选择角色" style="width:100%">
+              <el-form-item :label="$t('user.role')" prop="roleIds">
+                <el-select v-model.trim="dialogFormData.roleIds" multiple :placeholder="$t('user.pleaseSelectRole')" style="width:100%">
                   <el-option
                     v-for="item in roles"
                     :key="item.ID"
@@ -152,10 +152,10 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="状态" prop="status">
-                <el-select v-model.trim="dialogFormData.status" placeholder="请选择状态" style="width:100%">
-                  <el-option label="正常" :value="1" />
-                  <el-option label="禁用" :value="2" />
+              <el-form-item :label="$t('common.status')" prop="status">
+                <el-select v-model.trim="dialogFormData.status" :placeholder="$t('user.pleaseSelectStatus')" style="width:100%">
+                  <el-option :label="$t('common.normal')" :value="1" />
+                  <el-option :label="$t('common.disabled')" :value="2" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -180,48 +180,48 @@
               <el-form-item label="Shell">
                 <el-input
                   v-model.trim="dialogFormData.loginShell"
-                  :placeholder="defaultLoginShell ? `默认 ${defaultLoginShell}` : 'Shell'"
+                  :placeholder="defaultLoginShell ? $t('user.defaultShellPlaceholder', { shell: defaultLoginShell }) : 'Shell'"
                 />
               </el-form-item>
             </el-col>
 
             <el-col :span="24">
-              <el-form-item label="所属部门" prop="departmentId">
+              <el-form-item :label="$t('user.belongDepartment')" prop="departmentId">
                 <treeselect
                   v-model="dialogFormData.departmentId"
                   :options="departmentsOptions"
-                  placeholder="请选择部门"
+                  :placeholder="$t('user.pleaseSelectDepartment')"
                   :normalizer="normalizer"
                   value-consists-of="ALL"
                   :multiple="true"
                   :flat="true"
-                  no-children-text="没有更多选项"
-                  no-results-text="没有匹配的选项"
+                  :no-children-text="$t('common.noMoreOptions')"
+                  :no-results-text="$t('common.noMatchingOptions')"
                   @input="treeselectInput"
                 />
               </el-form-item>
             </el-col>
             <el-col :span="24">
-              <el-form-item label="地址" prop="postalAddress">
-                <el-input v-model.trim="dialogFormData.postalAddress" type="textarea" placeholder="地址" :autosize="{minRows: 3, maxRows: 6}" show-word-limit maxlength="100" />
+              <el-form-item :label="$t('user.address')" prop="postalAddress">
+                <el-input v-model.trim="dialogFormData.postalAddress" type="textarea" :placeholder="$t('user.address')" :autosize="{minRows: 3, maxRows: 6}" show-word-limit maxlength="100" />
               </el-form-item>
             </el-col>
             <el-col :span="24">
-              <el-form-item label="说明" prop="introduction">
-                <el-input v-model.trim="dialogFormData.introduction" type="textarea" placeholder="说明" :autosize="{minRows: 3, maxRows: 6}" show-word-limit maxlength="100" />
+              <el-form-item :label="$t('common.remark')" prop="introduction">
+                <el-input v-model.trim="dialogFormData.introduction" type="textarea" :placeholder="$t('common.remark')" :autosize="{minRows: 3, maxRows: 6}" show-word-limit maxlength="100" />
               </el-form-item>
             </el-col>
           </el-row>
         </el-form>
         <div slot="footer" class="dialog-footer">
-          <el-button size="mini" @click="cancelForm()">取 消</el-button>
-          <el-button size="mini" :loading="submitLoading" type="primary" @click="submitForm()">确 定</el-button>
+          <el-button size="mini" @click="cancelForm()">{{ $t('common.cancel') }}</el-button>
+          <el-button size="mini" :loading="submitLoading" type="primary" @click="submitForm()">{{ $t('common.confirm') }}</el-button>
         </div>
       </el-dialog>
 
-      <!-- 重置密码结果对话框 -->
+      <!-- Reset password result dialog -->
       <el-dialog
-        title="密码重置成功"
+        :title="$t('user.passwordResetSuccessful')"
         :visible.sync="resetPasswordDialogVisible"
         width="400px"
         :close-on-click-modal="false"
@@ -230,14 +230,14 @@
       >
         <div style="text-align: center;">
           <el-alert
-            title="请保存新密码"
+            :title="$t('user.pleaseSaveNewPassword')"
             type="warning"
             :closable="false"
             show-icon
             style="margin-bottom: 20px;"
           />
-          <p style="margin-bottom: 10px; font-weight: bold;">用户：{{ resetUsername }}</p>
-          <p style="margin-bottom: 20px; color: #606266;">新密码：</p>
+          <p style="margin-bottom: 10px; font-weight: bold;">{{ $t('user.userLabel') }}{{ resetUsername }}</p>
+          <p style="margin-bottom: 20px; color: #606266;">{{ $t('user.newPassword') }}:</p>
           <el-input
             v-model="newPassword"
             readonly
@@ -248,18 +248,18 @@
               icon="el-icon-document-copy"
               @click="copyPassword"
             >
-              复制
+              {{ $t('common.copy') }}
             </el-button>
           </el-input>
           <el-alert
-            title="请立即保存密码，关闭对话框后将无法再次查看"
+            :title="$t('user.savePasswordWarning')"
             type="info"
             :closable="false"
             show-icon
           />
         </div>
         <div slot="footer" class="dialog-footer">
-          <el-button type="primary" @click="closeResetPasswordDialog">我已保存</el-button>
+          <el-button type="primary" @click="closeResetPasswordDialog">{{ $t('user.iHaveSaved') }}</el-button>
         </div>
       </el-dialog>
 
@@ -284,14 +284,14 @@ export default {
     Treeselect
   },
   props: {
-    disabled: { // username 默认不可编辑，若需要至为可编辑，请（在新增和编辑处）去掉这个值的控制，且配合后端的ldap-user-name-modify配置使用
+    disabled: { // username is not editable by default. To make it editable, remove this control (in create and edit) and use with backend ldap-user-name-modify config
       type: Boolean,
       default: false
     }
   },
   data() {
     return {
-      // 查询参数
+      // Query parameters
       params: {
         username: '',
         nickname: '',
@@ -300,23 +300,23 @@ export default {
         pageNum: 1,
         pageSize: 10
       },
-      // 表格数据
+      // Table data
       tableData: [],
       total: 0,
       loading: false,
       isUpdate: false,
-      // 部门信息数据
+      // Department data
       treeselectValue: 0,
-      // 角色
+      // Roles
       roles: [],
-      // 部门信息
+      // Department info
       departmentsOptions: [],
 
       passwordType: 'password',
 
       publicKey: process.env.VUE_APP_PUBLIC_KEY,
 
-      // dialog对话框
+      // Dialog
       submitLoading: false,
       dialogFormTitle: '',
       dialogType: '',
@@ -342,28 +342,28 @@ export default {
       },
       dialogFormRules: {
         username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
-          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+          { required: true, message: this.$t('user.pleaseEnterUsername'), trigger: 'blur' },
+          { min: 2, max: 20, message: this.$t('common.lengthBetween', { min: 2, max: 20 }), trigger: 'blur' }
         ],
         password: [
-          { required: false, message: '请输入密码', trigger: 'blur' },
-          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+          { required: false, message: this.$t('user.pleaseEnterPassword'), trigger: 'blur' },
+          { min: 6, max: 30, message: this.$t('common.lengthBetween', { min: 6, max: 30 }), trigger: 'blur' }
         ],
         mail: [
-          { required: true, message: '请输入邮箱', trigger: 'blur' }
+          { required: true, message: this.$t('user.pleaseEnterEmail'), trigger: 'blur' }
         ],
         nickname: [
-          { required: true, message: '请输入昵称', trigger: 'blur' },
-          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+          { required: true, message: this.$t('user.pleaseEnterNickname'), trigger: 'blur' },
+          { min: 2, max: 20, message: this.$t('common.lengthBetween', { min: 2, max: 20 }), trigger: 'blur' }
         ],
         status: [
-          { required: true, message: '请选择状态', trigger: 'change' }
+          { required: true, message: this.$t('user.pleaseSelectStatus'), trigger: 'change' }
         ],
         departmentId: [
-          { required: true, message: '请选择部门', trigger: 'change' },
+          { required: true, message: this.$t('user.pleaseSelectDepartment'), trigger: 'change' },
           { validator: (rule, value, callBack) => {
             if (value < 1) {
-              callBack('请选择有效的部门')
+              callBack(this.$t('group.pleaseSelectValidDepartment'))
             } else {
               callBack()
             }
@@ -371,26 +371,26 @@ export default {
           }
         ],
         introduction: [
-          { required: false, message: '说明', trigger: 'blur' },
-          { min: 0, max: 100, message: '长度在 0 到 100 个字符', trigger: 'blur' }
+          { required: false, message: this.$t('common.remark'), trigger: 'blur' },
+          { min: 0, max: 100, message: this.$t('common.lengthBetween', { min: 0, max: 100 }), trigger: 'blur' }
         ]
       },
 
-      // 删除按钮弹出框
+      // Delete button popover
       popoverVisible: false,
-      // 表格多选
+      // Table multi-select
       multipleSelection: [],
       changeUserStatusFormData: {
         id: '',
         status: ''
       },
 
-      // 重置密码结果对话框
+      // Reset password result dialog
       resetPasswordDialogVisible: false,
       newPassword: '',
       resetUsername: '',
 
-      // 同步配置
+      // Sync configuration
       syncConfig: {
         ldapEnableSync: false,
         dingTalkEnableSync: false,
@@ -406,7 +406,7 @@ export default {
     this.getSyncConfig()
   },
   methods: {
-    // 获取同步配置
+    // Get sync configuration
     async getSyncConfig() {
       try {
         const { data } = await getConfig()
@@ -421,16 +421,16 @@ export default {
           this.dialogFormData.loginShell = this.defaultLoginShell
         }
       } catch (error) {
-        console.error('获取同步配置失败:', error)
+        console.error(this.$t('group.failedGetSyncConfig') + ':', error)
       }
     },
-    // 查询
+    // Search
     search() {
       this.params.pageNum = 1
       this.getTableData()
     },
 
-    // 获取表格数据
+    // Get table data
     async getTableData() {
       this.loading = true
       try {
@@ -449,30 +449,30 @@ export default {
         this.loading = false
       }
     },
-    // 获取所有的分组信息，用于弹框选取上级分组
+    // Get all groups for department selection in dialog
     async getAllGroups() {
       this.loading = true
       try {
         const checkParams = {
           pageNum: 1,
-          pageSize: 1000 // 平常百姓人家应该不会有这么多数据吧
+          pageSize: 1000 // Most organizations should not have this many entries
         }
         const { data } = await getGroupTree(checkParams)
-        this.departmentsOptions = [{ ID: 0, groupName: '请选择部门信息', groupType: 'T', children: data }]
+        this.departmentsOptions = [{ ID: 0, groupName: this.$t('user.pleaseSelectDepartmentInfo'), groupType: 'T', children: data }]
       } finally {
         this.loading = false
       }
     },
-    // 获取角色数据
+    // Get role data
     async getRoles() {
       const res = await getRoles(null)
 
       this.roles = res.data.roles
     },
 
-    // 新增
+    // Create
     create() {
-      this.dialogFormTitle = '新增用户'
+      this.dialogFormTitle = this.$t('user.addUser')
       this.dialogType = 'create'
       this.disabled = false
       this.getAllGroups()
@@ -480,7 +480,7 @@ export default {
       this.dialogFormData.loginShell = this.defaultLoginShell
     },
 
-    // 修改
+    // Edit
     update(row) {
       this.disabled = true
       this.getAllGroups()
@@ -491,10 +491,10 @@ export default {
       this.dialogFormData.status = row.status
 
       this.dialogFormData.introduction = row.introduction
-      // 遍历角色数组，获取角色ID
+      // Get role IDs from role array
       this.dialogFormData.roleIds = row.roles.map(item => item.ID)
 
-      this.dialogFormTitle = '修改用户'
+      this.dialogFormTitle = this.$t('user.editUser')
       this.dialogType = 'update'
       this.passwordType = 'password'
       this.dialogFormVisible = true
@@ -512,12 +512,12 @@ export default {
       this.dialogFormData.loginShell = row.loginShell || this.defaultLoginShell
     },
 
-    // 将 部门id 转换为 部门name
+    // Convert department ID to department name
     setDepartmentNameByDepartmentId() {
       const ids = this.dialogFormData.departmentId
       if (!ids || !ids.length) return
       const departments = []
-      // 深度优先遍函数
+      // Depth-first traversal
       const dfs = (node, cb) => {
         if (!node) return
         cb(node)
@@ -535,23 +535,23 @@ export default {
       this.dialogFormData.departments = departments.join(',')
     },
 
-    // 判断结果
+    // Check result
     judgeResult(res) {
       if (res.code === 0) {
         Message({
           showClose: true,
-          message: '操作成功',
+          message: this.$t('common.operationSuccessful'),
           type: 'success'
         })
       }
     },
 
-    // 提交表单
+    // Submit form
     submitForm() {
       if (this.dialogFormData.nickname === '') {
         Message({
           showClose: true,
-          message: '请填写昵称',
+          message: this.$t('user.pleaseEnterNickname'),
           type: 'error'
         })
         return false
@@ -559,7 +559,7 @@ export default {
       if (this.dialogFormData.username === '') {
         Message({
           showClose: true,
-          message: '请填写用户名',
+          message: this.$t('user.pleaseEnterUsername'),
           type: 'error'
         })
         return false
@@ -567,7 +567,7 @@ export default {
       if (this.dialogFormData.mail === '') {
         Message({
           showClose: true,
-          message: '请填写邮箱',
+          message: this.$t('user.pleaseEnterEmail'),
           type: 'error'
         })
         return false
@@ -575,7 +575,7 @@ export default {
       if (this.dialogFormData.status === '') {
         Message({
           showClose: true,
-          message: '请填写状态',
+          message: this.$t('user.pleaseEnterStatus'),
           type: 'error'
         })
         return false
@@ -583,7 +583,7 @@ export default {
       if (this.dialogFormData.roleIds === '') {
         Message({
           showClose: true,
-          message: '请选择角色列表',
+          message: this.$t('user.pleaseSelectRoles'),
           type: 'error'
         })
         return false
@@ -591,21 +591,21 @@ export default {
       this.$refs['dialogForm'].validate(async valid => {
         if (valid) {
           this.submitLoading = true
-          // 在这里自动填充下部门字段
+          // Auto-fill department field
           this.setDepartmentNameByDepartmentId()
           this.dialogFormDataCopy = { ...this.dialogFormData }
           if (this.dialogFormData.password !== '') {
-          // 密码RSA加密处理
+          // RSA encrypt password
             const encryptor = new JSEncrypt()
-            // 设置公钥
+            // Set public key
             const publicKey = (this.publicKey || '').replace(/\\n/g, '\n')
             encryptor.setPublicKey(publicKey)
-            // 加密密码
+            // Encrypt password
             const encPassword = encryptor.encrypt(this.dialogFormData.password)
             if (!encPassword) {
               Message({
                 showClose: true,
-                message: '公钥无效，无法加密密码',
+                message: this.$t('user.invalidPublicKey'),
                 type: 'error'
               })
               this.submitLoading = false
@@ -631,7 +631,7 @@ export default {
         } else {
           Message({
             showClose: true,
-            message: '表单校验失败',
+            message: this.$t('common.formValidationFailed'),
             type: 'warn'
           })
           return false
@@ -639,7 +639,7 @@ export default {
       })
     },
 
-    // 提交表单
+    // Cancel form
     cancelForm() {
       this.resetForm()
     },
@@ -667,11 +667,11 @@ export default {
       }
     },
 
-    // 批量删除
+    // Batch delete
     batchDelete() {
-      this.$confirm('此操作将永久删除, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      this.$confirm(this.$t('common.permanentDeleteWarning'), this.$t('common.notice'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
       }).then(async res => {
         this.loading = true
@@ -691,15 +691,15 @@ export default {
         Message({
           showClose: true,
           type: 'info',
-          message: '已取消删除'
+          message: this.$t('common.deleteCancelled')
         })
       })
     },
-    // 批量同步
+    // Batch sync
     batchSync() {
-      this.$confirm('此操作批量将数据库的用户同步到Ldap, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      this.$confirm(this.$t('user.batchSyncToLdap'), this.$t('common.notice'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
       }).then(async res => {
         this.loading = true
@@ -719,28 +719,28 @@ export default {
         Message({
           showClose: true,
           type: 'info',
-          message: '已取消同步'
+          message: this.$t('common.syncCancelled')
         })
       })
     },
 
-    // 监听 switch 开关 状态改变
+    // Watch switch status change
     async userStateChanged(userInfo) {
       this.changeUserStatusFormData.id = userInfo.ID
       this.changeUserStatusFormData.status = userInfo.status
       const { code } = await changeUserStatus(this.changeUserStatusFormData)
       if (code !== 0) {
-        return Message.error('更新用户状态失败')
+        return Message.error(this.$t('user.updateStatusFailed'))
       }
-      Message.success('更新用户状态成功')
+      Message.success(this.$t('user.updateStatusSuccessful'))
     },
 
-    // 表格多选
+    // Table multi-select
     handleSelectionChange(val) {
       this.multipleSelection = val
     },
 
-    // 单个删除
+    // Single delete
     async singleDelete(Id) {
       this.loading = true
       try {
@@ -752,7 +752,7 @@ export default {
       }
       this.getTableData()
     },
-    // 单个同步
+    // Single sync
     async singleSync(Id) {
       this.loading = true
       try {
@@ -773,7 +773,7 @@ export default {
       }
     },
 
-    // 分页
+    // Pagination
     handleSizeChange(val) {
       this.params.pageSize = val
       this.getTableData()
@@ -782,7 +782,7 @@ export default {
       this.params.pageNum = val
       this.getTableData()
     },
-    // treeselect
+    // Treeselect
     normalizer(node) {
       return {
         id: node.ID,
@@ -827,7 +827,7 @@ export default {
       })
     },
 
-    // 重置用户密码
+    // Reset user password
     async resetUserPassword(username) {
       this.loading = true
       try {
@@ -838,13 +838,13 @@ export default {
           this.resetPasswordDialogVisible = true
           Message({
             showClose: true,
-            message: '密码重置成功',
+            message: this.$t('user.passwordResetSuccessful'),
             type: 'success'
           })
         } else {
           Message({
             showClose: true,
-            message: res.msg || '密码重置失败',
+            message: res.msg || this.$t('user.passwordResetFailed'),
             type: 'error'
           })
         }
@@ -854,7 +854,7 @@ export default {
       this.getTableData()
     },
 
-    // 复制密码到剪贴板
+    // Copy password to clipboard
     copyPassword() {
       const textArea = document.createElement('textarea')
       textArea.value = this.newPassword
@@ -864,20 +864,20 @@ export default {
         document.execCommand('copy')
         Message({
           showClose: true,
-          message: '密码已复制到剪贴板',
+          message: this.$t('user.passwordCopied'),
           type: 'success'
         })
       } catch (err) {
         Message({
           showClose: true,
-          message: '复制失败，请手动复制',
+          message: this.$t('user.copyFailed'),
           type: 'error'
         })
       }
       document.body.removeChild(textArea)
     },
 
-    // 关闭重置密码对话框
+    // Close reset password dialog
     closeResetPasswordDialog() {
       this.resetPasswordDialogVisible = false
       this.newPassword = ''
