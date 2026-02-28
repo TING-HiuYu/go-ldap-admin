@@ -232,7 +232,7 @@ export default {
         oauthCode: [{ validator: verifySwitcher, trigger: 'change' }],
         newPassword: [
           { required: true, message: this.$t('account.pleaseEnterNewPassword'), trigger: 'blur' },
-          { min: 6, max: 30, message: this.$t('common.lengthBetween', {min: 6, max: 30}), trigger: 'blur' }
+          { min: 6, max: 30, message: this.$t('common.lengthBetween', { min: 6, max: 30 }), trigger: 'blur' }
         ],
         confirmPassword: [
           { required: true, validator: confirmPass, trigger: 'blur' }

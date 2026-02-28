@@ -439,7 +439,7 @@ export default {
       const rules = {}
       fields.forEach(f => {
         if (f && f.required) {
-          rules['config.' + f.key] = [{ required: true, message: this.$t('oauth.pleaseEnterField', {label: f.label}), trigger: 'blur' }]
+          rules['config.' + f.key] = [{ required: true, message: this.$t('oauth.pleaseEnterField', { label: f.label }), trigger: 'blur' }]
         }
       })
       this.dialogRules = rules
