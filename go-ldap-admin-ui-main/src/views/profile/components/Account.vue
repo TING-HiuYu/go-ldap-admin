@@ -5,8 +5,8 @@
 
       <el-card class="account-card span-two password-card">
         <div slot="header" class="clearfix header-flex">
-          <span>修改账户密码</span>
-          <span class="header-tip">支持邮箱验证码 / OAuth 验证</span>
+          <span>{{ $t('account.changeAccountPassword') }}</span>
+          <span class="header-tip">{{ $t('account.supportsVerification') }}</span>
         </div>
 
         <el-form
@@ -19,20 +19,20 @@
         >
           <div class="form-grid">
             <div class="verify-column">
-              <el-form-item label="验证方式">
+              <el-form-item :label="$t('account.verificationMethod')">
                 <el-radio-group v-model="verifyMethod" size="small" @change="handleVerifyChange">
-                  <el-radio-button label="password">原密码</el-radio-button>
-                  <el-radio-button label="email" :disabled="!posixForm.mail">邮箱验证码</el-radio-button>
+                  <el-radio-button label="password">{{ $t('account.originalPassword') }}</el-radio-button>
+                  <el-radio-button label="email" :disabled="!posixForm.mail">{{ $t('account.emailCode') }}</el-radio-button>
                   <el-radio-button label="oauth" :disabled="!connectors.length">OAuth</el-radio-button>
                 </el-radio-group>
               </el-form-item>
 
-              <el-form-item v-if="verifyMethod === 'password'" label="原密码" prop="oldPassword">
+              <el-form-item v-if="verifyMethod === 'password'" :label="$t('account.originalPassword')" prop="oldPassword">
                 <el-input
                   v-model.trim="dialogFormData.oldPassword"
                   autocomplete="on"
                   :type="passwordTypeOld"
-                  placeholder="请输入原密码"
+                  :placeholder="$t('account.pleaseEnterOriginalPassword')"
                 />
                 <span class="show-pwd" @click="showPwdOld">
                   <svg-icon :icon-class="passwordTypeOld === 'password' ? 'eye' : 'eye-open'" />
@@ -40,18 +40,18 @@
               </el-form-item>
 
               <template v-else-if="verifyMethod === 'email'">
-                <el-form-item label="邮箱">
-                  <el-input v-model="posixForm.mail" disabled placeholder="请先绑定邮箱" />
+                <el-form-item :label="$t('changePassword.email')">
+                  <el-input v-model="posixForm.mail" disabled :placeholder="$t('account.pleaseBindEmailFirst')" />
                 </el-form-item>
-                <el-form-item label="验证码" prop="otpCode" class="code-item">
+                <el-form-item :label="$t('account.verificationCode')" prop="otpCode" class="code-item">
                   <el-input
                     v-model.trim="dialogFormData.otpCode"
                     autocomplete="off"
-                    placeholder="请输入验证码"
+                    :placeholder="$t('account.pleaseEnterCode')"
                     maxlength="6"
                   />
                   <el-button class="inline-btn" :disabled="otpCountdown>0" size="mini" @click="sendPasswordCode">
-                    {{ otpCountdown>0 ? `重新获取(${otpCountdown}s)` : '获取验证码' }}
+                    {{ otpCountdown>0 ? $t('login.resend', {seconds: otpCountdown}) : $t('login.getCode') }}
                   </el-button>
                 </el-form-item>
               </template>
@@ -63,10 +63,10 @@
                       <div class="oauth-avatar">{{ item.provider.slice(0,1).toUpperCase() }}</div>
                       <div>
                         <div class="oauth-name">{{ item.name }}</div>
-                        <div class="oauth-meta">{{ item.provider }} · 点击完成校验</div>
+                        <div class="oauth-meta">{{ item.provider }} · {{ $t('account.clickToVerify') }}</div>
                       </div>
                     </div>
-                    <el-empty v-if="!connectors.length && !oauthLoading" description="暂无 OAuth 连接器" />
+                    <el-empty v-if="!connectors.length && !oauthLoading" :description="$t('account.noOauthConnectors')" />
                   </div>
                 </div>
               </template>
@@ -74,24 +74,24 @@
 
             <div class="password-column">
               <div class="password-grid">
-                <el-form-item label="新密码" prop="newPassword">
+                <el-form-item :label="$t('account.newPassword')" prop="newPassword">
                   <el-input
                     v-model.trim="dialogFormData.newPassword"
                     autocomplete="on"
                     :type="passwordTypeNew"
-                    placeholder="请输入新密码"
+                    :placeholder="$t('account.pleaseEnterNewPassword')"
                   />
                   <span class="show-pwd" @click="showPwdNew">
                     <svg-icon :icon-class="passwordTypeNew === 'password' ? 'eye' : 'eye-open'" />
                   </span>
                 </el-form-item>
 
-                <el-form-item label="确认密码" prop="confirmPassword">
+                <el-form-item :label="$t('account.confirmPassword')" prop="confirmPassword">
                   <el-input
                     v-model.trim="dialogFormData.confirmPassword"
                     autocomplete="on"
                     :type="passwordTypeConfirm"
-                    placeholder="请确认新密码"
+                    :placeholder="$t('account.pleaseConfirmNewPassword')"
                   />
                   <span class="show-pwd" @click="showPwdConfirm">
                     <svg-icon :icon-class="passwordTypeConfirm === 'password' ? 'eye' : 'eye-open'" />
@@ -102,15 +102,15 @@
           </div>
 
           <div class="btn-row">
-            <el-button :loading="submitLoading" type="primary" @click="submitForm">确定</el-button>
-            <el-button @click="cancelForm">取消</el-button>
+            <el-button :loading="submitLoading" type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
+            <el-button @click="cancelForm">{{ $t('common.cancel') }}</el-button>
           </div>
         </el-form>
       </el-card>
 
       <el-card v-if="isPosixUser" class="account-card">
         <div slot="header" class="clearfix">
-          <span>终端设置</span>
+          <span>{{ $t('account.terminalSettings') }}</span>
         </div>
 
         <el-form label-width="110px" size="small">
@@ -126,39 +126,39 @@
           <el-form-item label="Shell">
             <el-input
               v-model.trim="posixForm.loginShell"
-              placeholder="请输入登录Shell，如 /bin/bash"
+              :placeholder="$t('account.enterLoginShellExample')"
             />
           </el-form-item>
           <el-form-item>
-            <el-button :loading="posixSaveLoading" type="primary" @click="savePosixShell">保存</el-button>
+            <el-button :loading="posixSaveLoading" type="primary" @click="savePosixShell">{{ $t('common.save') }}</el-button>
           </el-form-item>
         </el-form>
       </el-card>
 
       <el-card v-if="isPosixUser" class="account-card span-two">
         <div slot="header" class="clearfix">
-          <span>生成并下载 SSH 证书</span>
+          <span>{{ $t('account.generateAndDownloadSshCert') }}</span>
         </div>
 
         <el-alert
           type="info"
           :closable="false"
           style="margin-bottom: 12px;"
-          title="点击生成后，后台将创建新的密钥对并签发用户证书，私钥仅此展示/下载一次，请妥善保存。"
+          :title="$t('account.generateSshCertDescription')"
         />
 
         <div style="margin-bottom: 12px; display: flex; gap: 8px;">
-          <el-button type="primary" size="small" :loading="issueLoading" @click="handleIssue">生成</el-button>
-          <el-button size="small" :disabled="!sshData.zipBase64" @click="downloadZip">下载</el-button>
-          <el-button size="small" @click="openReadme">导入教程</el-button>
+          <el-button type="primary" size="small" :loading="issueLoading" @click="handleIssue">{{ $t('account.generate') }}</el-button>
+          <el-button size="small" :disabled="!sshData.zipBase64" @click="downloadZip">{{ $t('account.download') }}</el-button>
+          <el-button size="small" @click="openReadme">{{ $t('account.importGuide') }}</el-button>
         </div>
 
         <el-form label-width="110px" size="small">
-          <el-form-item label="私钥">
-            <el-input v-model="sshData.privateKey" type="textarea" :rows="4" readonly placeholder="生成后展示" />
+          <el-form-item :label="$t('account.privateKey')">
+            <el-input v-model="sshData.privateKey" type="textarea" :rows="4" readonly :placeholder="$t('account.shownAfterGeneration')" />
           </el-form-item>
-          <el-form-item label="用户证书">
-            <el-input v-model="sshData.certificate" type="textarea" :rows="3" readonly placeholder="生成后展示" />
+          <el-form-item :label="$t('account.userCertificate')">
+            <el-input v-model="sshData.certificate" type="textarea" :rows="3" readonly :placeholder="$t('account.shownAfterGeneration')" />
           </el-form-item>
         </el-form>
       </el-card>
@@ -187,31 +187,31 @@ export default {
     const confirmPass = (rule, value, callback) => {
       if (value) {
         if (this.dialogFormData.newPassword !== value) {
-          callback(new Error('两次输入的密码不一致'))
+          callback(new Error(this.$t('account.passwordsDoNotMatch')))
         } else {
           callback()
         }
       } else {
-        callback(new Error('请再次输入新密码'))
+        callback(new Error(this.$t('account.pleaseEnterNewPasswordAgain')))
       }
     }
     const verifySwitcher = (rule, value, callback) => {
       if (rule.field === 'oldPassword') {
         if (this.verifyMethod !== 'password') return callback()
         if (!this.dialogFormData.oldPassword || this.dialogFormData.oldPassword.length < 6) {
-          return callback(new Error('请输入原密码'))
+          return callback(new Error(this.$t('account.pleaseEnterOriginalPassword')))
         }
       }
       if (rule.field === 'otpCode') {
         if (this.verifyMethod !== 'email') return callback()
         if (!this.dialogFormData.otpCode || this.dialogFormData.otpCode.length !== 6) {
-          return callback(new Error('请输入邮箱验证码'))
+          return callback(new Error(this.$t('account.pleaseEnterEmailCode')))
         }
       }
       if (rule.field === 'oauthCode') {
         if (this.verifyMethod !== 'oauth') return callback()
         if (!this.dialogFormData.oauthCode) {
-          return callback(new Error('请先完成 OAuth 校验'))
+          return callback(new Error(this.$t('account.pleaseCompleteOauth')))
         }
       }
       callback()
@@ -231,8 +231,8 @@ export default {
         otpCode: [{ validator: verifySwitcher, trigger: 'blur' }],
         oauthCode: [{ validator: verifySwitcher, trigger: 'change' }],
         newPassword: [
-          { required: true, message: '请输入新密码', trigger: 'blur' },
-          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+          { required: true, message: this.$t('account.pleaseEnterNewPassword'), trigger: 'blur' },
+          { min: 6, max: 30, message: this.$t('common.lengthBetween', {min: 6, max: 30}), trigger: 'blur' }
         ],
         confirmPassword: [
           { required: true, validator: confirmPass, trigger: 'blur' }
@@ -310,7 +310,7 @@ export default {
         if (valid) {
           const verification = this.getVerificationValue()
           if (!verification) {
-            Message({ showClose: true, message: '请完成身份验证', type: 'error' })
+            Message({ showClose: true, message: this.$t('account.pleaseCompleteVerification'), type: 'error' })
             return
           }
           const dialogFormDataCopy = { ...this.dialogFormData }
@@ -322,7 +322,7 @@ export default {
           const newPasswd = encryptor.encrypt(this.dialogFormData.newPassword)
           const confirmPasswd = encryptor.encrypt(this.dialogFormData.confirmPassword)
           if (!oldPasswd || !newPasswd || !confirmPasswd) {
-            this.$message.error('公钥无效，密码加密失败')
+            this.$message.error(this.$t('account.invalidPublicKey'))
             this.submitLoading = false
             return
           }
@@ -344,7 +344,7 @@ export default {
           this.resetForm()
           Message({
             showClose: true,
-            message: '密码修改成功，请重新登录',
+            message: this.$t('account.passwordChangedRelogin'),
             type: 'success'
           })
           // 重新登录
@@ -356,7 +356,7 @@ export default {
         } else {
           this.$message({
             showClose: true,
-            message: '表单校验失败',
+            message: this.$t('common.formValidationFailed'),
             type: 'warn'
           })
           return false
@@ -404,16 +404,16 @@ export default {
     async sendPasswordCode() {
       if (this.verifyMethod !== 'email') return
       if (!this.posixForm.mail) {
-        Message({ showClose: true, message: '请先绑定邮箱', type: 'error' })
+        Message({ showClose: true, message: this.$t('account.pleaseBindEmailFirst'), type: 'error' })
         return
       }
       if (this.otpCountdown > 0) return
       try {
         await sendPasswordChangeCode()
-        Message({ showClose: true, message: '验证码已发送，请查收邮箱', type: 'success' })
+        Message({ showClose: true, message: this.$t('account.codeSent'), type: 'success' })
         this.startCountdown()
       } catch (e) {
-        Message({ showClose: true, message: e?.message || '发送失败', type: 'error' })
+        Message({ showClose: true, message: e?.message || this.$t('login.sendFailed'), type: 'error' })
       }
     },
     startCountdown() {
@@ -440,7 +440,7 @@ export default {
       try {
         const { data } = await startPasswordOAuth({ connectorId: connector.id, intent: 'password' })
         if (!data || !data.authUrl) {
-          Message({ showClose: true, message: '未获取到授权地址', type: 'error' })
+          Message({ showClose: true, message: this.$t('account.failedGetAuthUrl'), type: 'error' })
           this.oauthLoading = false
           return
         }
@@ -448,10 +448,10 @@ export default {
         const features = 'width=520,height=640,menubar=no,toolbar=no'
         this.oauthWindow = window.open(data.authUrl, '_blank', features)
         if (!this.oauthWindow) {
-          Message({ showClose: true, message: '请允许浏览器弹出窗口后重试', type: 'error' })
+          Message({ showClose: true, message: this.$t('account.allowPopups'), type: 'error' })
         }
       } catch (e) {
-        Message({ showClose: true, message: e?.message || '启动 OAuth 验证失败', type: 'error' })
+        Message({ showClose: true, message: e?.message || this.$t('account.failedStartOauthVerification'), type: 'error' })
       } finally {
         this.oauthLoading = false
       }
@@ -465,7 +465,7 @@ export default {
       if (payload.code) {
         this.dialogFormData.oauthCode = payload.code
         this.verifyMethod = 'oauth'
-        Message({ showClose: true, message: 'OAuth 验证完成，可提交新密码', type: 'success' })
+        Message({ showClose: true, message: this.$t('account.oauthVerificationComplete'), type: 'success' })
       }
     },
     async handleIssue() {
@@ -474,14 +474,14 @@ export default {
         const { code, msg, data } = await issueSSHPubKey()
         this.issueLoading = false
         if (code !== 0) {
-          return Message({ showClose: true, message: msg || '生成失败', type: 'error' })
+          return Message({ showClose: true, message: msg || this.$t('account.generationFailed'), type: 'error' })
         }
         this.sshData = { ...data }
-        Message({ showClose: true, message: '生成成功，请立即下载并妥善保存私钥', type: 'success' })
+        Message({ showClose: true, message: this.$t('account.generationSuccess'), type: 'success' })
         this.downloadZip()
       } catch (err) {
         this.issueLoading = false
-        Message({ showClose: true, message: err?.message || '生成失败', type: 'error' })
+        Message({ showClose: true, message: err?.message || this.$t('account.generationFailed'), type: 'error' })
       }
     },
     downloadZip() {
@@ -497,7 +497,7 @@ export default {
         const name = this.sshData.zipName || `ssh-${Date.now()}.zip`
         saveAs(blob, name)
       } catch (e) {
-        Message({ showClose: true, message: '下载失败，请重试', type: 'error' })
+        Message({ showClose: true, message: this.$t('account.downloadFailed'), type: 'error' })
       }
     },
     async openReadme() {
@@ -508,7 +508,7 @@ export default {
         const url = `https://markdownreader.mutantcat.org/?base64=${encoded}`
         window.open(url, '_blank')
       } catch (e) {
-        Message({ showClose: true, message: '打开教程失败，请稍后重试', type: 'error' })
+        Message({ showClose: true, message: this.$t('account.openGuideFailed'), type: 'error' })
       }
     },
     async loadConnectors() {
@@ -559,15 +559,15 @@ export default {
     },
     async savePosixShell() {
       if (!this.posixForm.loginShell) {
-        Message({ showClose: true, message: '请输入登录Shell', type: 'error' })
+        Message({ showClose: true, message: this.$t('account.pleaseEnterLoginShell'), type: 'error' })
         return
       }
       if (!this.posixForm.roleIds || !this.posixForm.roleIds.length) {
-        Message({ showClose: true, message: '缺少角色信息，无法保存', type: 'error' })
+        Message({ showClose: true, message: this.$t('account.missingRoleInfo'), type: 'error' })
         return
       }
       if (!this.posixForm.departmentId || !this.posixForm.departmentId.length) {
-        Message({ showClose: true, message: '缺少部门信息，无法保存', type: 'error' })
+        Message({ showClose: true, message: this.$t('account.missingDepartmentInfo'), type: 'error' })
         return
       }
       // 组装更新请求，沿用完整更新接口避免字段缺失
@@ -593,11 +593,11 @@ export default {
       try {
         const { code, msg } = await updateUserById(payload)
         if (code !== 0) {
-          return Message({ showClose: true, message: msg || '保存失败', type: 'error' })
+          return Message({ showClose: true, message: msg || this.$t('account.saveFailed'), type: 'error' })
         }
-        Message({ showClose: true, message: '保存成功', type: 'success' })
+        Message({ showClose: true, message: this.$t('account.saveSuccessful'), type: 'success' })
       } catch (e) {
-        Message({ showClose: true, message: e?.message || '保存失败', type: 'error' })
+        Message({ showClose: true, message: e?.message || this.$t('account.saveFailed'), type: 'error' })
       } finally {
         this.posixSaveLoading = false
       }
