@@ -21,6 +21,7 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
+import { initTranslateJs, isAutoTranslateLang, switchAutoTranslate } from './utils/translatejs'
 
 Vue.use(Element, {
   size: Cookies.get('size') || 'medium',
@@ -41,5 +42,13 @@ new Vue({
   router,
   store,
   i18n,
+  mounted() {
+    initTranslateJs()
+    // If the saved locale is an auto-translate language, apply it
+    const savedLocale = localStorage.getItem('locale')
+    if (savedLocale && isAutoTranslateLang(savedLocale)) {
+      switchAutoTranslate(savedLocale)
+    }
+  },
   render: h => h(App)
 })

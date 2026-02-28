@@ -459,7 +459,8 @@ export default {
     switchLang: 'Language',
     en: 'English',
     zh: '中文',
-    switchSuccess: 'Language switched'
+    switchSuccess: 'Language switched',
+    autoTranslateNote: 'Auto-translated by translate.js'
   },
   layout: {
     recordPassword: 'Please record your password',

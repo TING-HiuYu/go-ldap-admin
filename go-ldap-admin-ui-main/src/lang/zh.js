@@ -459,7 +459,8 @@ export default {
     switchLang: '语言',
     en: 'English',
     zh: '中文',
-    switchSuccess: '切换语言成功'
+    switchSuccess: '切换语言成功',
+    autoTranslateNote: '由 translate.js 自动翻译'
   },
   layout: {
     recordPassword: '请记录您的密码',
