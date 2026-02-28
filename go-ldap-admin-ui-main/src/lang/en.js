@@ -441,5 +441,22 @@ export default {
     month: 'month',
     hour: 'hour',
     minute: 'minute'
+  },
+  upload: {
+    dragOrClick: 'Drag file here, or <em>click to upload</em>',
+    dragOrClick2: 'Drag or <em>click to upload</em>'
+  },
+  iconSelect: {
+    placeholder: 'Enter icon name'
+  },
+  notFound: {
+    message: 'The webmaster said that you can not enter this page...',
+    checkUrl: 'Please check that the URL you entered is correct, or click the button below to return to the homepage.',
+    backToHome: 'Back to home'
+  },
+  langSwitch: {
+    switchLang: 'Language',
+    en: 'English',
+    zh: '中文'
   }
 }

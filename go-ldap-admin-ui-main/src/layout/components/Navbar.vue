@@ -6,24 +6,24 @@
 
     <div class="right-menu">
       <template v-if="device!=='mobile'">
-        <el-tooltip content="搜索" effect="dark" placement="bottom">
+        <el-tooltip :content="$t('navbar.search')" effect="dark" placement="bottom">
           <search id="header-search" class="right-menu-item" />
         </el-tooltip>
 
         <error-log class="errLog-container right-menu-item hover-effect" />
 
-        <el-tooltip content="全屏" effect="dark" placement="bottom">
+        <el-tooltip :content="$t('navbar.fullscreen')" effect="dark" placement="bottom">
           <screenfull id="screenfull" class="right-menu-item hover-effect" />
         </el-tooltip>
 
-        <el-tooltip content="布局大小" effect="dark" placement="bottom">
+        <el-tooltip :content="$t('navbar.layoutSize')" effect="dark" placement="bottom">
           <size-select id="size-select" class="right-menu-item hover-effect" />
         </el-tooltip>
 
-        <el-tooltip content="官方文档" effect="dark" placement="bottom">
+        <el-tooltip :content="$t('navbar.documentation')" effect="dark" placement="bottom">
           <el-link style="font-size: 23px;" icon="el-icon-document" class="right-menu-item" href="http://ldapdoc.eryajf.net" :underline="false" target="_blank" />
         </el-tooltip>
-        <el-tooltip content="GitHub地址" effect="dark" placement="bottom">
+        <el-tooltip :content="$t('navbar.github')" effect="dark" placement="bottom">
           <el-link style="font-size: 23px;" class="iconfont icon-github right-menu-item" href="https://github.com/eryajf/go-ldap-admin" :underline="false" target="_blank" />
         </el-tooltip>
 
@@ -36,10 +36,13 @@
         </div>
         <el-dropdown-menu slot="dropdown">
           <router-link to="/profile/index">
-            <el-dropdown-item>个人中心</el-dropdown-item>
+            <el-dropdown-item>{{ $t('navbar.profile') }}</el-dropdown-item>
           </router-link>
+          <el-dropdown-item>
+            <lang-select :show-label="true" />
+          </el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">
-            <span style="display:block;">退出登陆</span>
+            <span style="display:block;">{{ $t('navbar.logout') }}</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
@@ -55,6 +58,7 @@ import ErrorLog from '@/components/ErrorLog'
 import Screenfull from '@/components/Screenfull'
 import SizeSelect from '@/components/SizeSelect'
 import Search from '@/components/HeaderSearch'
+import LangSelect from '@/components/LangSelect'
 import '@/assets/iconfont/font/iconfont.css'
 
 export default {
@@ -64,7 +68,8 @@ export default {
     ErrorLog,
     Screenfull,
     SizeSelect,
-    Search
+    Search,
+    LangSelect
   },
   computed: {
     ...mapGetters([

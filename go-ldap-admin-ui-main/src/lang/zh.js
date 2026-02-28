@@ -441,5 +441,22 @@ export default {
     month: '月',
     hour: '时',
     minute: '分'
+  },
+  upload: {
+    dragOrClick: '将文件拖到此处，或<em>点击上传</em>',
+    dragOrClick2: 'Drag或<em>点击上传</em>'
+  },
+  iconSelect: {
+    placeholder: '请输入图标名称'
+  },
+  notFound: {
+    message: '网站管理员说你不能进入此页面...',
+    checkUrl: '请检查您输入的网址是否正确，或点击下方按钮返回首页。',
+    backToHome: '回首页'
+  },
+  langSwitch: {
+    switchLang: '语言',
+    en: 'English',
+    zh: '中文'
   }
 }

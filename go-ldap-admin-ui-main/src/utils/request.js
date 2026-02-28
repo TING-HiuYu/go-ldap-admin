@@ -4,6 +4,7 @@ import store from '@/store'
 // import router from '@/router'
 import { getToken } from '@/utils/auth'
 import router from '@/router'
+import i18n from '@/lang'
 
 // create an axios instance
 const service = axios.create({
@@ -58,19 +59,16 @@ service.interceptors.response.use(
   },
   error => {
     if (error.response.status === 401) {
-      if (error.response.data.message.indexOf('JWT认证失败') !== -1) {
+      if (error.response.data.message.indexOf('JWT') !== -1) {
         MessageBox.confirm(
-          '登录失败,用户名或密码错误,重新登录或继续停留在当前页？',
-          '登录状态已失效',
+          i18n.t('request.loginFailedMessage'),
+          i18n.t('request.loginSessionExpired'),
           {
-            confirmButtonText: '重新登录',
-            cancelButtonText: '继续停留',
+            confirmButtonText: i18n.t('request.reLogin'),
+            cancelButtonText: i18n.t('request.stay'),
             type: 'warning'
           }
         ).then(() => {
-          // store.dispatch('user/resetToken').then(() => {
-          //   location.reload()
-          // })
           store.dispatch('user/logout').then(() => {
             location.reload()
           })
