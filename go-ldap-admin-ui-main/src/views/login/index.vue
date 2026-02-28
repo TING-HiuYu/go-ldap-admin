@@ -4,20 +4,20 @@
     <div class="login-body">
       <div class="brand-card">
         <div class="brand-title">Go-Ldap-Admin</div>
-        <p class="brand-sub">一个账号，连接 LDAP、OAuth 与团队。</p>
+        <p class="brand-sub">{{ $t('login.slogan') }}</p>
         <div class="brand-metrics">
-          <span class="pill">安全 · 邮箱 OTP</span>
+          <span class="pill">{{ $t('login.securityEmailOtp') }}</span>
           <span class="pill">GitHub OAuth</span>
-          <span class="pill">Casbin 授权</span>
+          <span class="pill">{{ $t('login.casbinAuth') }}</span>
         </div>
       </div>
 
       <div class="auth-card">
         <div class="auth-header">
           <div class="mode-switch">
-            <span :class="['mode-item', { active: loginMode === 'password' }]" @click="switchMode('password')">账号密码</span>
-            <span :class="['mode-item', { active: loginMode === 'otp' }]" @click="switchMode('otp')">邮箱验证码</span>
-            <span :class="['mode-item', { active: loginMode === 'oauth' }]" @click="switchMode('oauth')">OAuth 登录</span>
+            <span :class="['mode-item', { active: loginMode === 'password' }]" @click="switchMode('password')">{{ $t('login.accountPassword') }}</span>
+            <span :class="['mode-item', { active: loginMode === 'otp' }]" @click="switchMode('otp')">{{ $t('login.emailCode') }}</span>
+            <span :class="['mode-item', { active: loginMode === 'oauth' }]" @click="switchMode('oauth')">{{ $t('login.oauthLogin') }}</span>
           </div>
           <p class="auth-hint">{{ modeHint }}</p>
         </div>
@@ -36,7 +36,7 @@
             <el-input
               ref="username"
               v-model="loginForm.username"
-              placeholder="用户名"
+              :placeholder="$t('login.username')"
               name="username"
               type="text"
               tabindex="1"
@@ -44,7 +44,7 @@
             />
           </el-form-item>
 
-          <el-tooltip v-model="capsTooltip" content="Caps Lock 已开启" placement="right" manual>
+          <el-tooltip v-model="capsTooltip" :content="$t('login.capsLockOn')" placement="right" manual>
             <el-form-item prop="password">
               <span class="svg-container"><svg-icon icon-class="password" /></span>
               <el-input
@@ -52,7 +52,7 @@
                 ref="password"
                 v-model="loginForm.password"
                 :type="passwordType"
-                placeholder="密码"
+                :placeholder="$t('login.password')"
                 name="password"
                 tabindex="2"
                 autocomplete="on"
@@ -67,8 +67,8 @@
           </el-tooltip>
 
           <div class="form-actions">
-            <el-link type="primary" class="fixed-link" @click="changePass"><span class="link-label">忘记密码?</span></el-link>
-            <el-button :loading="loading" type="primary" class="full-btn" @click.native.prevent="handlePasswordLogin">登录</el-button>
+            <el-link type="primary" class="fixed-link" @click="changePass"><span class="link-label">{{ $t('login.forgotPassword') }}</span></el-link>
+            <el-button :loading="loading" type="primary" class="full-btn" @click.native.prevent="handlePasswordLogin">{{ $t('login.login') }}</el-button>
           </div>
         </el-form>
 
@@ -82,17 +82,17 @@
         >
           <el-form-item prop="mail">
             <span class="svg-container"><svg-icon icon-class="email" /></span>
-            <el-input v-model.trim="otpForm.mail" placeholder="请输入邮箱" autocomplete="on" />
+            <el-input v-model.trim="otpForm.mail" :placeholder="$t('login.enterEmail')" autocomplete="on" />
           </el-form-item>
           <el-form-item prop="code">
             <span class="svg-container"><svg-icon icon-class="password" /></span>
-            <el-input v-model.trim="otpForm.code" placeholder="请输入6位验证码" maxlength="6" />
+            <el-input v-model.trim="otpForm.code" :placeholder="$t('login.enterSixDigitCode')" maxlength="6" />
             <el-button class="code-btn" :disabled="otpCountdown>0" @click="sendOtpCode">
-              {{ otpCountdown>0 ? `重新获取(${otpCountdown}s)` : '获取验证码' }}
+              {{ otpCountdown>0 ? $t('login.resend', {seconds: otpCountdown}) : $t('login.getCode') }}
             </el-button>
           </el-form-item>
           <div class="form-actions">
-            <el-link type="primary" class="fixed-link" @click="switchMode('password')"><span class="link-label">改用账号密码</span></el-link>
+            <el-link type="primary" class="fixed-link" @click="switchMode('password')"><span class="link-label">{{ $t('login.usePasswordInstead') }}</span></el-link>
             <el-button :loading="loading" type="primary" :class="['full-btn', { danger: isResetFlow }]" @click.native.prevent="handleOtpLogin">{{ otpButtonText }}</el-button>
           </div>
         </el-form>
@@ -105,18 +105,18 @@
               </div>
               <div>
                 <div class="name">{{ item.name }}</div>
-                <div class="meta">{{ item.provider }} · {{ item.enabled ? '启用' : '停用' }}</div>
+                <div class="meta">{{ item.provider }} · {{ item.enabled ? $t('login.enabled') : $t('login.disabled') }}</div>
               </div>
             </div>
-            <el-empty v-if="!connectors.length && !oauthLoading" description="暂无可用的 OAuth 连接器" />
+            <el-empty v-if="!connectors.length && !oauthLoading" :description="$t('login.noOauthConnectors')" />
           </div>
           <div class="form-actions">
-            <el-link type="primary" @click="switchMode('password')">返回账号密码</el-link>
+            <el-link type="primary" @click="switchMode('password')">{{ $t('login.backToPassword') }}</el-link>
           </div>
         </div>
 
         <div v-if="loginMode!=='oauth' && connectors.length" class="oauth-inline">
-          <span class="inline-label">快捷使用 OAuth：</span>
+          <span class="inline-label">{{ $t('login.quickOauth') }}</span>
           <el-button
             v-for="item in connectors"
             :key="item.id"
@@ -144,7 +144,7 @@ export default {
   data() {
     const validatePassword = (rule, value, callback) => {
       if (!value || value.length < 6) {
-        callback(new Error('密码长度至少 6 位'))
+        callback(new Error(this.$t('login.passwordMinLength')))
       } else {
         callback()
       }
@@ -162,12 +162,12 @@ export default {
         code: ''
       },
       loginRules: {
-        username: [{ required: true, trigger: 'submit', message: '请输入用户名' }],
+        username: [{ required: true, trigger: 'submit', message: this.$t('login.pleaseEnterUsername') }],
         password: [{ required: true, trigger: 'submit', validator: validatePassword }]
       },
       otpRules: {
-        mail: [{ required: true, trigger: 'submit', message: '请输入邮箱' }],
-        code: [{ required: true, trigger: 'submit', message: '请输入验证码', min: 6, max: 6 }]
+        mail: [{ required: true, trigger: 'submit', message: this.$t('login.enterEmail') }],
+        code: [{ required: true, trigger: 'submit', message: this.$t('login.pleaseEnterCode'), min: 6, max: 6 }]
       },
       passwordType: 'password',
       publicKey: process.env.VUE_APP_PUBLIC_KEY,
@@ -187,10 +187,10 @@ export default {
     modeHint() {
       if (this.loginMode === 'password') return ''
       if (this.loginMode === 'otp') return ''
-      return '选择一个连接器完成 OAuth 授权并登录。'
+      return this.$t('login.selectConnector')
     },
     otpButtonText() {
-      return this.isResetFlow ? '重置密码并登录' : '登录'
+      return this.isResetFlow ? this.$t('login.resetPasswordAndLogin') : this.$t('login.login')
     }
   },
   watch: {
@@ -267,7 +267,7 @@ export default {
         const encPassword = encryptor.encrypt(this.loginForm.password)
         if (!encPassword) {
           this.loading = false
-          this.$message.error('公钥无效，登录已中断')
+          this.$message.error(this.$t('login.invalidPublicKey'))
           return
         }
         const payload = { username: this.loginForm.username, password: encPassword }
@@ -283,17 +283,17 @@ export default {
     sendOtpCode() {
       if (this.otpCountdown > 0) return
       if (!this.otpForm.mail) {
-        this.$message.warning('请先填写邮箱')
+        this.$message.warning(this.$t('login.pleaseEnterEmailFirst'))
         return
       }
       this.$refs.otpForm.validateField('mail', async valid => {
         if (valid) return
         try {
           await sendLoginOtp({ mail: this.otpForm.mail })
-          this.$message.success('验证码已发送，请查收邮箱')
+          this.$message.success(this.$t('login.codeSent'))
           this.startCountdown()
         } catch (e) {
-          this.$message.error(e?.message || '发送失败')
+          this.$message.error(e?.message || this.$t('login.sendFailed'))
         }
       })
     },
@@ -320,18 +320,18 @@ export default {
           const { data } = await otpLogin(payload)
           const token = data?.token
           if (!token) {
-            this.$message.error('登录失败，未获取到 token')
+            this.$message.error(this.$t('login.loginFailedNoToken'))
             this.loading = false
             return
           }
           this.applyToken(token)
           if (this.isResetFlow && data?.newPassword) {
-            // 保存新密码到 sessionStorage，进入主界面后弹窗提示
+            // Save new password to sessionStorage, show dialog after entering main UI
             sessionStorage.setItem('generatedPassword', data.newPassword)
           }
           this.afterLogin()
         } catch (e) {
-          this.$message.error(e?.message || '登录失败')
+          this.$message.error(e?.message || this.$t('login.loginFailed'))
           this.loading = false
         }
       })
@@ -352,7 +352,7 @@ export default {
       try {
         const { data } = await startOAuth({ connectorId: connector.id, intent: 'login' })
         if (!data || !data.authUrl) {
-          this.$message.error('未获取到授权地址')
+          this.$message.error(this.$t('login.failedGetAuthUrl'))
           this.oauthLoading = false
           return
         }
@@ -360,10 +360,10 @@ export default {
         const features = 'width=520,height=640,menubar=no,toolbar=no'
         this.oauthWindow = window.open(data.authUrl, '_blank', features)
         if (!this.oauthWindow) {
-          this.$message.error('请允许浏览器弹出窗口后重试')
+          this.$message.error(this.$t('login.allowPopups'))
         }
       } catch (e) {
-        this.$message.error(e?.message || '启动授权失败')
+        this.$message.error(e?.message || this.$t('login.failedStartAuth'))
       } finally {
         this.oauthLoading = false
       }
@@ -376,14 +376,14 @@ export default {
       delete this.pendingStates[payload.state]
       if (payload.intent === 'login' && payload.token) {
         this.applyToken(payload.token)
-        // 如果是新创建用户，后端会返回生成的随机密码
+        // If user was newly created, backend returns the generated random password
         if (payload.generatedPassword) {
           sessionStorage.setItem('generatedPassword', payload.generatedPassword)
         }
-        this.$message.success('OAuth 登录成功')
+        this.$message.success(this.$t('login.oauthLoginSuccess'))
         this.afterLogin()
       } else {
-        this.$message.warning('未获取到登录凭证，请重试')
+        this.$message.warning(this.$t('login.noCredentials'))
       }
     },
     applyToken(token) {

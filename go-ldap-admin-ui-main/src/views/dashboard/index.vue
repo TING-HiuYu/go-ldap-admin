@@ -74,11 +74,11 @@ export default {
   computed: {
     ...mapGetters(['roles'])
   },
-  // 普通用户登录后跳转到个人中心
+  // Redirect regular users to profile page after login
   beforeRouteEnter(to, from, next) {
     next(vm => {
       const roles = vm.$store.getters.roles
-      if (roles.length > 0 && roles.includes('普通用户')) {
+      if (roles.length > 0 && roles.includes(vm.$t('dashboard.regularUser'))) {
         vm.$router.push('/profile/index')
       }
     })
