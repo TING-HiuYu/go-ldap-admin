@@ -758,7 +758,7 @@ export default {
     // 提交表单
     submitForm(e) {
       let flag, attributes
-      if (this.checked[0] === 'user') {
+      if (this.checked && this.checked[0] === 'user') {
         if (this.userVal === '') {
           Message({
             message: this.$t('fieldRelation.pleaseSelectTypeFlag'),

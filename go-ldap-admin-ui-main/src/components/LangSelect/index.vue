@@ -33,7 +33,7 @@ export default {
       this.$i18n.locale = lang
       localStorage.setItem('locale', lang)
       this.$message({
-        message: lang === 'zh' ? '切换语言成功' : 'Language switched',
+        message: this.$t('langSwitch.switchSuccess'),
         type: 'success',
         duration: 1500
       })

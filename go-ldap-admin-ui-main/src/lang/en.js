@@ -438,9 +438,10 @@ export default {
     minutesAgo: '{n} minutes ago',
     hoursAgo: '{n} hours ago',
     oneDayAgo: '1 day ago',
-    month: 'month',
-    hour: 'hour',
-    minute: 'minute'
+    day: '/',
+    month: '/',
+    hour: ':',
+    minute: ''
   },
   upload: {
     dragOrClick: 'Drag file here, or <em>click to upload</em>',
@@ -457,7 +458,8 @@ export default {
   langSwitch: {
     switchLang: 'Language',
     en: 'English',
-    zh: '中文'
+    zh: '中文',
+    switchSuccess: 'Language switched'
   },
   layout: {
     recordPassword: 'Please record your password',

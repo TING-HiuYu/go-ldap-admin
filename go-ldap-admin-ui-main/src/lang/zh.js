@@ -438,6 +438,7 @@ export default {
     minutesAgo: '{n}分钟前',
     hoursAgo: '{n}小时前',
     oneDayAgo: '1天前',
+    day: '日',
     month: '月',
     hour: '时',
     minute: '分'
@@ -457,7 +458,8 @@ export default {
   langSwitch: {
     switchLang: '语言',
     en: 'English',
-    zh: '中文'
+    zh: '中文',
+    switchSuccess: '切换语言成功'
   },
   layout: {
     recordPassword: '请记录您的密码',

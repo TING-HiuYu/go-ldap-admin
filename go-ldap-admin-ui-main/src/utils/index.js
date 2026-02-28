@@ -129,7 +129,7 @@ export function formatTime(time, option) {
       1 +
       i18n.t('time.month') +
       d.getDate() +
-      i18n.t('time.sun') +
+      i18n.t('time.day') +
       d.getHours() +
       i18n.t('time.hour') +
       d.getMinutes() +
