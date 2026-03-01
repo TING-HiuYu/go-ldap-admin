@@ -2,6 +2,8 @@
  * Created by PanJiaChen on 16/11/18.
  */
 
+import i18n from '@/lang'
+
 /**
  * Parse the time to string
  * @param {(Object|string|number)} time
@@ -45,7 +47,13 @@ export function parseTime(time, cFormat) {
   const time_str = format.replace(/{([ymdhisa])+}/g, (result, key) => {
     const value = formatObj[key]
     // Note: getDay() returns 0 on Sunday
-    if (key === 'a') { return ['日', '一', '二', '三', '四', '五', '六'][value ] }
+    if (key === 'a') {
+      return [
+        i18n.t('time.sun'), i18n.t('time.mon'), i18n.t('time.tue'),
+        i18n.t('time.wed'), i18n.t('time.thu'), i18n.t('time.fri'),
+        i18n.t('time.sat')
+      ][value]
+    }
     return value.toString().padStart(2, '0')
   })
   return time_str
@@ -75,7 +83,13 @@ export function parseGoTime(time, cFormat) {
   const time_str = format.replace(/{([ymdhisa])+}/g, (result, key) => {
     const value = formatObj[key]
     // Note: getDay() returns 0 on Sunday
-    if (key === 'a') { return ['日', '一', '二', '三', '四', '五', '六'][value ] }
+    if (key === 'a') {
+      return [
+        i18n.t('time.sun'), i18n.t('time.mon'), i18n.t('time.tue'),
+        i18n.t('time.wed'), i18n.t('time.thu'), i18n.t('time.fri'),
+        i18n.t('time.sat')
+      ][value]
+    }
     return value.toString().padStart(2, '0')
   })
   return time_str
@@ -98,14 +112,14 @@ export function formatTime(time, option) {
   const diff = (now - d) / 1000
 
   if (diff < 30) {
-    return '刚刚'
+    return i18n.t('time.justNow')
   } else if (diff < 3600) {
     // less 1 hour
-    return Math.ceil(diff / 60) + '分钟前'
+    return i18n.t('time.minutesAgo', { n: Math.ceil(diff / 60) })
   } else if (diff < 3600 * 24) {
-    return Math.ceil(diff / 3600) + '小时前'
+    return i18n.t('time.hoursAgo', { n: Math.ceil(diff / 3600) })
   } else if (diff < 3600 * 24 * 2) {
-    return '1天前'
+    return i18n.t('time.oneDayAgo')
   }
   if (option) {
     return parseTime(time, option)
@@ -113,13 +127,13 @@ export function formatTime(time, option) {
     return (
       d.getMonth() +
       1 +
-      '月' +
+      i18n.t('time.month') +
       d.getDate() +
-      '日' +
+      i18n.t('time.day') +
       d.getHours() +
-      '时' +
+      i18n.t('time.hour') +
       d.getMinutes() +
-      '分'
+      i18n.t('time.minute')
     )
   }
 }

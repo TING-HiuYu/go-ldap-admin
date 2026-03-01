@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"time"
 
 	"github.com/eryajf/go-ldap-admin/logic"
@@ -67,22 +69,53 @@ func main() {
 	port := config.Conf.System.Port
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", host, port),
 		Handler: r,
 	}
+
+	listenType := config.Conf.System.ListenType
 
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			common.Log.Fatalf("listen: %s\n", err)
+		switch listenType {
+		case "socket":
+			socketPath := config.Conf.System.Socket
+			if socketPath == "" {
+				common.Log.Fatal("listen-type is socket but socket path is empty")
+			}
+			// 确保 socket 文件所在目录存在
+			socketDir := filepath.Dir(socketPath)
+			if err := os.MkdirAll(socketDir, 0755); err != nil {
+				common.Log.Fatalf("Failed to create socket directory %s: %s", socketDir, err)
+			}
+			// 删除可能残留的旧 socket 文件
+			if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
+				common.Log.Fatalf("Failed to remove old socket file %s: %s", socketPath, err)
+			}
+			listener, err := net.Listen("unix", socketPath)
+			if err != nil {
+				common.Log.Fatalf("Failed to listen on unix socket %s: %s", socketPath, err)
+			}
+			// 设置 socket 文件权限，方便 nginx 等进程访问
+			if err := os.Chmod(socketPath, 0666); err != nil {
+				common.Log.Fatalf("Failed to chmod socket file %s: %s", socketPath, err)
+			}
+			common.Log.Info(fmt.Sprintf("Server is running at unix://%s", socketPath))
+			if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
+				common.Log.Fatalf("listen: %s\n", err)
+			}
+		default:
+			// 默认使用 TCP 监听
+			srv.Addr = fmt.Sprintf("%s:%d", host, port)
+			common.Log.Info(fmt.Sprintf("Server is running at http://%s:%d", host, port))
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				common.Log.Fatalf("listen: %s\n", err)
+			}
 		}
 	}()
 
 	// 启动定时任务
 	logic.InitCron()
-
-	common.Log.Info(fmt.Sprintf("Server is running at http://%s:%d", host, port))
 
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.

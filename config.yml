@@ -4,8 +4,13 @@ system:
   mode: debug
   # url前缀
   url-path-prefix: api
+  # 监听类型
+  listen-type: socket # tcp or socket
   # 程序监听端口
   port: 8888
+  # socket文件路径，release部署请用这个
+  socket: /run/go-ldap-admin/go-ldap-admin.sock
+
   # 是否初始化数据(没有初始数据时使用, 已发布正式版改为false)
   init-data: true
   # 是否允许用户自助申请SSH证书

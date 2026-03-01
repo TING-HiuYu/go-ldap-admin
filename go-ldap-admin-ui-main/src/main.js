@@ -41,5 +41,7 @@ new Vue({
   router,
   store,
   i18n,
+  mounted() {},
+
   render: h => h(App)
 })

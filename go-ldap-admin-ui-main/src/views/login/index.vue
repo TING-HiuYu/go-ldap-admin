@@ -128,6 +128,10 @@
             {{ item.name }}
           </el-button>
         </div>
+
+        <div class="lang-switch-row">
+          <lang-select :show-label="true" />
+        </div>
       </div>
     </div>
   </div>
@@ -138,9 +142,11 @@ import JSEncrypt from 'jsencrypt'
 import { sendLoginOtp, otpLogin } from '@/api/system/base'
 import { publicConnectors, startOAuth } from '@/api/system/oauth'
 import { setToken } from '@/utils/auth'
+import LangSelect from '@/components/LangSelect'
 
 export default {
   name: 'Login',
+  components: { LangSelect },
   data() {
     const validatePassword = (rule, value, callback) => {
       if (!value || value.length < 6) {
@@ -704,6 +710,15 @@ export default {
   color: #e9edff;
   border-radius: 999px;
   padding: 6px 12px;
+}
+
+.lang-switch-row {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  color: #aeb9d7;
+  font-size: 13px;
 }
 
 @media (max-width: 1024px) {
