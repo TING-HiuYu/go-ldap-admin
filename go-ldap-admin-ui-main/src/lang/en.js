@@ -45,9 +45,9 @@ export default {
     slogan: 'One account, connecting LDAP, OAuth and teams.',
     securityEmailOtp: 'Security · Email OTP',
     casbinAuth: 'Casbin Authorization',
-    accountPassword: 'Account Password',
+    accountPassword: 'Password',
     emailCode: 'Email Code',
-    oauthLogin: 'OAuth Login',
+    oauthLogin: 'OAuth',
     username: 'Username',
     password: 'Password',
     capsLockOn: 'Caps Lock is on',
@@ -459,8 +459,13 @@ export default {
     switchLang: 'Language',
     en: 'English',
     zh: '中文',
-    switchSuccess: 'Language switched',
-    autoTranslateNote: 'Auto-translated by translate.js'
+    ja: '日本語',
+    de: 'Deutsch',
+    fr: 'Français',
+    es: 'Español',
+    ru: 'Русский',
+    ar: 'العربية',
+    switchSuccess: 'Language switched'
   },
   layout: {
     recordPassword: 'Please record your password',

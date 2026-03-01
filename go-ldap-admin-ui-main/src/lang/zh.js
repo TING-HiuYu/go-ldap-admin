@@ -46,7 +46,7 @@ export default {
     securityEmailOtp: '安全 · 邮箱 OTP',
     casbinAuth: 'Casbin 授权',
     accountPassword: '账号密码',
-    emailCode: '邮箱验证码',
+    emailCode: 'MFA 登录',
     oauthLogin: 'OAuth 登录',
     username: '用户名',
     password: '密码',
@@ -459,8 +459,13 @@ export default {
     switchLang: '语言',
     en: 'English',
     zh: '中文',
-    switchSuccess: '切换语言成功',
-    autoTranslateNote: '由 translate.js 自动翻译'
+    ja: '日本語',
+    de: 'Deutsch',
+    fr: 'Français',
+    es: 'Español',
+    ru: 'Русский',
+    ar: 'العربية',
+    switchSuccess: '切换语言成功'
   },
   layout: {
     recordPassword: '请记录您的密码',

@@ -1,13 +1,11 @@
 <template>
   <el-dropdown trigger="click" @command="handleCommand">
     <span class="lang-trigger">
-      <i class="el-icon-s-flag" />
+      <svg-icon icon-class="language" class="lang-icon" />
       <span v-if="showLabel" class="lang-label">{{ currentLabel }}</span>
     </span>
     <el-dropdown-menu slot="dropdown" class="lang-dropdown-menu">
-      <el-dropdown-item command="en" :class="{ 'is-active': language === 'en' }">English</el-dropdown-item>
-      <el-dropdown-item command="zh" :class="{ 'is-active': language === 'zh' }">中文</el-dropdown-item>
-      <el-dropdown-item v-for="lang in autoLanguages" :key="lang.code" :command="lang.code" :class="{ 'is-active': language === lang.code }" divided-first>
+      <el-dropdown-item v-for="lang in languages" :key="lang.code" :command="lang.code" :class="{ 'is-active': language === lang.code }">
         {{ lang.label }}
       </el-dropdown-item>
     </el-dropdown-menu>
@@ -15,7 +13,16 @@
 </template>
 
 <script>
-import { autoTranslateLanguages, isAutoTranslateLang, switchAutoTranslate, resetAutoTranslate } from '@/utils/translatejs'
+const supportedLanguages = [
+  { code: 'zh', label: '中文' },
+  { code: 'en', label: 'English' },
+  { code: 'ja', label: '日本語' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'ar', label: 'العربية' }
+]
 
 export default {
   name: 'LangSelect',
@@ -27,44 +34,28 @@ export default {
   },
   data() {
     return {
-      autoLanguages: autoTranslateLanguages
+      languages: supportedLanguages
     }
   },
   computed: {
     language() {
-      return localStorage.getItem('locale') || this.$i18n.locale
+      return this.$i18n.locale
     },
     currentLabel() {
-      if (this.language === 'zh') return '中文'
-      if (this.language === 'en') return 'English'
-      const found = autoTranslateLanguages.find(l => l.code === this.language)
-      return found ? found.label : 'English'
+      const found = supportedLanguages.find(l => l.code === this.language)
+      return found ? found.label : '中文'
     }
   },
   methods: {
     handleCommand(lang) {
       localStorage.setItem('locale', lang)
-
-      if (isAutoTranslateLang(lang)) {
-        // For auto-translated languages, keep vue-i18n on English (source)
-        // and let translate.js handle the DOM translation
-        this.$i18n.locale = 'en'
-        switchAutoTranslate(lang)
-      } else {
-        // For manually maintained locales (en/zh), reset translate.js
-        // and switch vue-i18n locale
-        resetAutoTranslate()
-        this.$i18n.locale = lang
-      }
+      this.$i18n.locale = lang
 
       this.$message({
         message: this.$t('langSwitch.switchSuccess'),
         type: 'success',
         duration: 1500
       })
-
-      // Force re-render to update computed label
-      this.$forceUpdate()
     }
   }
 }
@@ -78,6 +69,11 @@ export default {
   gap: 4px;
   color: inherit;
   font-size: inherit;
+}
+.lang-icon {
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: middle;
 }
 .lang-label {
   font-size: 13px;
