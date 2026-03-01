@@ -159,7 +159,9 @@ func InitConfig() {
 type SystemConfig struct {
 	Mode            string `mapstructure:"mode" json:"mode"`
 	UrlPathPrefix   string `mapstructure:"url-path-prefix" json:"urlPathPrefix"`
+	ListenType      string `mapstructure:"listen-type" json:"listenType"`
 	Port            int    `mapstructure:"port" json:"port"`
+	Socket          string `mapstructure:"socket" json:"socket"`
 	InitData        bool   `mapstructure:"init-data" json:"initData"`
 	IssueSSHPubKey  bool   `mapstructure:"issue-ssh-pubkey" json:"issueSshPubkey"`
 	CAPath          string `mapstructure:"ca-path" json:"caPath"`
