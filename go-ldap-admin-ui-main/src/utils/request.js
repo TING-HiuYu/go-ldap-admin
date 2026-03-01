@@ -58,6 +58,15 @@ service.interceptors.response.use(
     }
   },
   error => {
+    if (!error.response) {
+      Message({
+        showClose: true,
+        message: error.message,
+        type: 'error',
+        duration: 5 * 1000
+      })
+      return Promise.reject(error)
+    }
     if (error.response.status === 401) {
       if (error.response.data.message.indexOf('JWT') !== -1) {
         MessageBox.confirm(
