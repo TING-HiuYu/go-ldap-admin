@@ -9,10 +9,10 @@ import (
 
 type FieldRelationController struct{}
 
-// List 记录列表
-// @Summary 获字段关系管理列表
-// Description: 获字段关系管理列表
-// @Tags 字段关系管理
+// List retrieves a list of field relation records.
+// @Summary List field relations
+// @Description Retrieve a list of field relation management records
+// @Tags Field Relation Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -25,13 +25,13 @@ func (m *FieldRelationController) List(c *gin.Context) {
 	})
 }
 
-// Add 新建记录
-// @Summary 新建字段关系管理记录
-// Description: 新建字段关系管理记录
-// @Tags 字段关系管理
+// Add creates a new field relation record.
+// @Summary Add a field relation
+// @Description Create a new field relation management record
+// @Tags Field Relation Management
 // @Accept application/json
 // @Produce application/json
-// @Param data body request.FieldRelationAddReq true "新建字段关系管理记录"
+// @Param data body request.FieldRelationAddReq true "Field relation creation request"
 // @Success 200 {object} response.ResponseBody
 // @Router /fieldrelation/add [post]
 // @Security ApiKeyAuth
@@ -42,13 +42,13 @@ func (m *FieldRelationController) Add(c *gin.Context) {
 	})
 }
 
-// Update 更新记录
-// @Summary 更新字段关系管理记录
-// Description: 更新字段关系管理记录
-// @Tags 字段关系管理
+// Update modifies an existing field relation record.
+// @Summary Update a field relation
+// @Description Update an existing field relation management record
+// @Tags Field Relation Management
 // @Accept application/json
 // @Produce application/json
-// @Param data body request.FieldRelationUpdateReq true "更新字段关系管理记录"
+// @Param data body request.FieldRelationUpdateReq true "Field relation update request"
 // @Success 200 {object} response.ResponseBody
 // @Router /fieldrelation/update [post]
 // @Security ApiKeyAuth
@@ -59,13 +59,13 @@ func (m *FieldRelationController) Update(c *gin.Context) {
 	})
 }
 
-// Delete 删除记录
-// @Summary 删除字段关系管理记录
-// Description: 删除字段关系管理记录
-// @Tags 字段关系管理
+// Delete removes a field relation record.
+// @Summary Delete a field relation
+// @Description Delete an existing field relation management record
+// @Tags Field Relation Management
 // @Accept application/json
 // @Produce application/json
-// @Param data body request.FieldRelationDeleteReq true "删除字段关系管理记录"
+// @Param data body request.FieldRelationDeleteReq true "Field relation deletion request"
 // @Success 200 {object} response.ResponseBody
 // @Router /fieldrelation/delete [post]
 // @Security ApiKeyAuth
