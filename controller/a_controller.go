@@ -29,6 +29,7 @@ var (
 	trans    ut.Translator
 )
 
+// init initializes the validator with Chinese translations and custom validation rules.
 func init() {
 	uni := ut.New(zh.New())
 	trans, _ = uni.GetTranslator("zh")
@@ -36,21 +37,23 @@ func init() {
 	_ = validate.RegisterValidation("checkMobile", checkMobile)
 }
 
+// checkMobile is a custom validator that checks whether a field value is a valid mobile phone number.
 func checkMobile(fl validator.FieldLevel) bool {
 	reg := `1\d{10}`
 	rgx := regexp.MustCompile(reg)
 	return rgx.MatchString(fl.Field().String())
 }
 
+// Run binds the request, validates it, and executes the given handler function.
 func Run(c *gin.Context, req any, fn func() (any, any)) {
 	var err error
-	// bind struct
+	// Bind the incoming request to the struct
 	err = c.Bind(req)
 	if err != nil {
 		tools.Err(c, tools.NewValidatorError(err), nil)
 		return
 	}
-	// 校验
+	// Validate the bound struct
 	err = validate.Struct(req)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
@@ -66,18 +69,19 @@ func Run(c *gin.Context, req any, fn func() (any, any)) {
 	tools.Success(c, data)
 }
 
-// Demo
-// @Summary 健康检测
-// @Tags 基础管理
+// Demo is the health check endpoint.
+// @Summary Health Check
+// @Tags Base Management
 // @Produce json
-// @Description 健康检测
+// @Description Health check endpoint that returns a pong response
 // @Success 200 {object} response.ResponseBody
 // @router /base/ping [get]
 func Demo(c *gin.Context) {
-	// 健康检测
+	// Health check
 	CodeDebug()
 	c.JSON(http.StatusOK, tools.H{"code": 200, "msg": "ok", "data": "pong"})
 }
 
+// CodeDebug is a placeholder function used for debugging purposes.
 func CodeDebug() {
 }
