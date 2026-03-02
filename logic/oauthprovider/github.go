@@ -16,8 +16,10 @@ import (
 	"github.com/eryajf/go-ldap-admin/public/tools"
 )
 
+// githubProvider implements the Provider interface for GitHub OAuth.
 type githubProvider struct{}
 
+// githubConfig holds the OAuth configuration for a GitHub connector.
 type githubConfig struct {
 	ClientID     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
@@ -27,6 +29,7 @@ type githubConfig struct {
 	APIBase      string `json:"apiBase"`
 }
 
+// githubProfile represents the user profile returned by the GitHub API.
 type githubProfile struct {
 	ID        int64  `json:"id"`
 	Login     string `json:"login"`
@@ -35,6 +38,7 @@ type githubProfile struct {
 	AvatarURL string `json:"avatar_url"`
 }
 
+// githubEmail represents an email entry from the GitHub emails API.
 type githubEmail struct {
 	Email      string `json:"email"`
 	Primary    bool   `json:"primary"`
@@ -126,10 +130,10 @@ func (p githubProvider) FetchProfile(connector *model.OAuthConnector, code strin
 		return nil, err
 	}
 
-	// ── 确定后端实际请求的目标地址 ──
-	// 原则：只有后端向 GitHub 发起 HTTP 请求（取 token、取用户信息）时才走代理；
-	//       面向客户端/浏览器的 URL（如 BuildAuthorizeURL）永远使用 connector 配置。
-	//       如果 connector 配置了自建 GitHub Enterprise 地址，则不使用代理。
+	// ── Determine the backend target URLs ──
+	// Only backend-to-GitHub HTTP requests (token exchange, user info) use the proxy.
+	// Browser-facing URLs (e.g. BuildAuthorizeURL) always use the connector config.
+	// If the connector is configured for GitHub Enterprise, the proxy is not used.
 	configBase := strings.TrimSuffix(cfg.BaseURL, "/")
 	if configBase == "" {
 		configBase = "https://github.com"
@@ -139,7 +143,7 @@ func (p githubProvider) FetchProfile(connector *model.OAuthConnector, code strin
 		configAPI = "https://api.github.com"
 	}
 
-	// 仅当 connector 使用的是公共 github.com 且代理地址已配置时，后端走代理
+	// Only proxy when using public github.com and proxy addresses are configured
 	tokenBase := configBase
 	apiBase := configAPI
 	if configBase == "https://github.com" && githubProxyBase != "" {
@@ -223,6 +227,7 @@ func (p githubProvider) FetchProfile(connector *model.OAuthConnector, code strin
 	return &OAuthUserProfile{ID: fmt.Sprintf("%d", prof.ID), Username: username, Name: name, Email: email, Avatar: prof.AvatarURL}, nil
 }
 
+// parseConfig unmarshals the connector's JSON config into a githubConfig.
 func (p githubProvider) parseConfig(connector *model.OAuthConnector) (*githubConfig, error) {
 	var cfg githubConfig
 	if err := json.Unmarshal(connector.Config, &cfg); err != nil {
@@ -231,6 +236,7 @@ func (p githubProvider) parseConfig(connector *model.OAuthConnector) (*githubCon
 	return &cfg, nil
 }
 
+// fetchGitHubPrimaryEmail retrieves the user's primary verified email via the GitHub API.
 func fetchGitHubPrimaryEmail(apiBase, token string) (string, error) {
 	urlStr := fmt.Sprintf("%s/user/emails", apiBase)
 	req, _ := http.NewRequest(http.MethodGet, urlStr, nil)
@@ -263,6 +269,7 @@ func fetchGitHubPrimaryEmail(apiBase, token string) (string, error) {
 	return "", nil
 }
 
+// normalizeRedirectURI validates and prepends the URL path prefix to the redirect URI if needed.
 func normalizeRedirectURI(raw string) (string, error) {
 	if strings.TrimSpace(raw) == "" {
 		return "", tools.NewValidatorError(fmt.Errorf("Github配置缺少redirectUri"))
@@ -287,6 +294,7 @@ func normalizeRedirectURI(raw string) (string, error) {
 	return parsed.String(), nil
 }
 
+// githubRedirectDefault returns the default redirect URI path for GitHub OAuth.
 func githubRedirectDefault() string {
 	prefix := strings.Trim(strings.TrimSpace(config.Conf.System.UrlPathPrefix), "/")
 	if prefix == "" {

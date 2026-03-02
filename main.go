@@ -21,10 +21,10 @@ import (
 
 // @title Go Ldap Admin
 // @version 1.0
-// @description 基于Go+Vue实现的openLDAP后台管理项目
+// @description OpenLDAP management platform built with Go and Vue
 // @termsOfService https://github.com/eryajf/go-ldap-admin
 
-// @contact.name 项目作者：二丫讲梵 、 swagger作者：南宫乘风
+// @contact.name Authors: eryajf, nangongchengfeng
 // @contact.url https://github.com/eryajf/go-ldap-admin
 // @contact.email https://github.com/eryajf/go-ldap-admin
 
@@ -35,34 +35,34 @@ import (
 // @name Authorization
 func main() {
 
-	// 加载配置文件到全局配置结构体
+	// Load configuration file into global config struct
 	config.InitConfig()
 
-	// 初始化日志
+	// Initialize logger
 	common.InitLogger()
 
-	// 初始化数据库(mysql)
+	// Initialize database (MySQL)
 	common.InitDB()
 
-	// 初始化ldap连接
+	// Initialize LDAP connection
 	common.InitLDAP()
 
-	// 初始化casbin策略管理器
+	// Initialize Casbin policy enforcer
 	common.InitCasbinEnforcer()
 
-	// 初始化Validator数据校验
+	// Initialize data validator
 	common.InitValidate()
 
-	// 初始化mysql数据
+	// Initialize MySQL seed data
 	common.InitData()
 
-	// 操作日志中间件处理日志时没有将日志发送到rabbitmq或者kafka中, 而是发送到了channel中
-	// 这里开启3个goroutine处理channel将日志记录到数据库
+	// The operation-log middleware sends logs to a channel instead of RabbitMQ/Kafka.
+	// Start 3 goroutines to drain the channel and persist logs to the database.
 	for i := 0; i < 3; i++ {
 		go isql.OperationLog.SaveOperationLogChannel(middleware.OperationLogChan)
 	}
 
-	// 注册所有路由
+	// Register all routes
 	r := routes.InitRoutes()
 
 	host := "0.0.0.0"
@@ -83,12 +83,12 @@ func main() {
 			if socketPath == "" {
 				common.Log.Fatal("listen-type is socket but socket path is empty")
 			}
-			// 确保 socket 文件所在目录存在
+			// Ensure the socket file directory exists
 			socketDir := filepath.Dir(socketPath)
 			if err := os.MkdirAll(socketDir, 0755); err != nil {
 				common.Log.Fatalf("Failed to create socket directory %s: %s", socketDir, err)
 			}
-			// 删除可能残留的旧 socket 文件
+			// Remove any leftover old socket file
 			if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
 				common.Log.Fatalf("Failed to remove old socket file %s: %s", socketPath, err)
 			}
@@ -96,7 +96,7 @@ func main() {
 			if err != nil {
 				common.Log.Fatalf("Failed to listen on unix socket %s: %s", socketPath, err)
 			}
-			// 设置 socket 文件权限，方便 nginx 等进程访问
+			// Set socket file permissions so nginx and other processes can access it
 			if err := os.Chmod(socketPath, 0666); err != nil {
 				common.Log.Fatalf("Failed to chmod socket file %s: %s", socketPath, err)
 			}
@@ -105,7 +105,7 @@ func main() {
 				common.Log.Fatalf("listen: %s\n", err)
 			}
 		default:
-			// 默认使用 TCP 监听
+			// Default to TCP listener
 			srv.Addr = fmt.Sprintf("%s:%d", host, port)
 			common.Log.Info(fmt.Sprintf("Server is running at http://%s:%d", host, port))
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -114,7 +114,7 @@ func main() {
 		}
 	}()
 
-	// 启动定时任务
+	// Start scheduled tasks
 	logic.InitCron()
 
 	// Wait for interrupt signal to gracefully shutdown the server with

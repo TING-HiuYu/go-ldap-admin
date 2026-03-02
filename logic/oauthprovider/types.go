@@ -5,7 +5,7 @@ import (
 	"github.com/eryajf/go-ldap-admin/model/response"
 )
 
-// OAuthUserProfile describes a normalized OAuth user profile.
+// OAuthUserProfile describes a normalized user profile obtained from an OAuth provider.
 type OAuthUserProfile struct {
 	ID       string
 	Username string
@@ -14,7 +14,7 @@ type OAuthUserProfile struct {
 	Avatar   string
 }
 
-// Provider defines the OAuth provider contract.
+// Provider defines the contract that every OAuth provider must implement.
 type Provider interface {
 	ID() string
 	Name() string
