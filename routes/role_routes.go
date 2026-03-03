@@ -8,11 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// InitRoleRoutes registers role routes with JWT and Casbin middleware.
 func InitRoleRoutes(r *gin.RouterGroup, authMiddleware *jwt.GinJWTMiddleware) gin.IRoutes {
 	role := r.Group("/role")
-	// 开启jwt认证中间件
+	// Enable JWT authentication middleware
 	role.Use(authMiddleware.MiddlewareFunc())
-	// 开启casbin鉴权中间件
+	// Enable Casbin authorization middleware
 	role.Use(middleware.CasbinMiddleware())
 	{
 		role.GET("/list", controller.Role.List)

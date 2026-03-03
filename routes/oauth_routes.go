@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// InitOAuthRoutes 注册OAuth相关路由
+// InitOAuthRoutes registers OAuth-related routes.
 func InitOAuthRoutes(r *gin.RouterGroup, authMiddleware *jwt.GinJWTMiddleware) gin.IRoutes {
 	oauth := r.Group("/oauth")
 	{

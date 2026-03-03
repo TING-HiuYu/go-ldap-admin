@@ -25,6 +25,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// OAuthLogic provides business logic for OAuth connector management.
 type OAuthLogic struct{}
 
 var (
@@ -38,6 +39,7 @@ type oauthState struct {
 	UserID      uint   `json:"userId"`
 }
 
+// oauthCallbackResult holds the result of an OAuth callback.
 type oauthCallbackResult struct {
 	Intent            string
 	User              *model.User
@@ -47,10 +49,10 @@ type oauthCallbackResult struct {
 	State             string
 	Token             string
 	ExpiresAt         time.Time
-	GeneratedPassword string // 仅新创建用户时有值
+	GeneratedPassword string // only set for newly created users
 }
 
-// Create 连接器
+// Create creates a new OAuth connector.
 func (l OAuthLogic) Create(c *gin.Context, req any) (data any, rspError any) {
 	r, ok := req.(*request.OAuthConnectorCreateReq)
 	if !ok {
@@ -65,7 +67,7 @@ func (l OAuthLogic) Create(c *gin.Context, req any) (data any, rspError any) {
 	if r.DepartmentId == 0 {
 		return nil, tools.NewValidatorError(fmt.Errorf("请选择所属部门"))
 	}
-	// 校验角色与部门存在
+	// Validate that roles and department exist
 	if _, err := isql.Role.GetRolesByIds(r.DefaultRoleIds); err != nil {
 		return nil, tools.NewValidatorError(fmt.Errorf("角色无效: %v", err))
 	}
@@ -109,7 +111,7 @@ func (l OAuthLogic) Create(c *gin.Context, req any) (data any, rspError any) {
 		return nil, tools.NewMySqlError(fmt.Errorf("创建连接器失败: %v", err))
 	}
 
-	// 保存 webhooks
+	// Save webhooks
 	if len(r.Webhooks) > 0 {
 		if err := saveWebhooks(conn.ID, r.Webhooks); err != nil {
 			return nil, tools.NewMySqlError(fmt.Errorf("保存Webhook失败: %v", err))
@@ -119,7 +121,7 @@ func (l OAuthLogic) Create(c *gin.Context, req any) (data any, rspError any) {
 	return conn.ID, nil
 }
 
-// Update 更新连接器
+// Update updates an existing OAuth connector.
 func (l OAuthLogic) Update(c *gin.Context, req any) (data any, rspError any) {
 	r, ok := req.(*request.OAuthConnectorUpdateReq)
 	if !ok {
@@ -175,7 +177,7 @@ func (l OAuthLogic) Update(c *gin.Context, req any) (data any, rspError any) {
 		return nil, tools.NewMySqlError(fmt.Errorf("更新连接器失败: %v", err))
 	}
 
-	// 更新 webhooks（先删后建）
+	// Update webhooks (delete old, insert new)
 	if err := saveWebhooks(conn.ID, r.Webhooks); err != nil {
 		return nil, tools.NewMySqlError(fmt.Errorf("保存Webhook失败: %v", err))
 	}
@@ -183,7 +185,7 @@ func (l OAuthLogic) Update(c *gin.Context, req any) (data any, rspError any) {
 	return conn.ID, nil
 }
 
-// Delete 删除连接器
+// Delete deletes one or more OAuth connectors by ID.
 func (l OAuthLogic) Delete(c *gin.Context, req any) (data any, rspError any) {
 	r, ok := req.(*request.OAuthConnectorDeleteReq)
 	if !ok {
@@ -192,7 +194,7 @@ func (l OAuthLogic) Delete(c *gin.Context, req any) (data any, rspError any) {
 	if len(r.Ids) == 0 {
 		return nil, tools.NewValidatorError(fmt.Errorf("请选择要删除的连接器"))
 	}
-	// 先删除关联的 webhooks
+	// Delete associated webhooks first
 	if err := common.DB.Where("oauth_connector_id IN (?)", r.Ids).Delete(&model.OAuthWebhook{}).Error; err != nil {
 		return nil, tools.NewMySqlError(fmt.Errorf("删除关联Webhook失败: %v", err))
 	}
@@ -202,7 +204,7 @@ func (l OAuthLogic) Delete(c *gin.Context, req any) (data any, rspError any) {
 	return nil, nil
 }
 
-// List 管理端列表
+// List returns the paginated connector list for the admin panel.
 func (l OAuthLogic) List(c *gin.Context, req any) (data any, rspError any) {
 	r, ok := req.(*request.OAuthConnectorListReq)
 	if !ok {
@@ -226,7 +228,7 @@ func (l OAuthLogic) List(c *gin.Context, req any) (data any, rspError any) {
 	}, nil
 }
 
-// PublicList 登录页使用的连接器列表（去除敏感字段）
+// PublicList returns the enabled connectors for the login page (sensitive fields omitted).
 func (l OAuthLogic) PublicList(c *gin.Context, req any) (data any, rspError any) {
 	_, ok := req.(*request.OAuthConnectorListReq)
 	if !ok {
@@ -243,7 +245,7 @@ func (l OAuthLogic) PublicList(c *gin.Context, req any) (data any, rspError any)
 	return items, nil
 }
 
-// StartAuth 登录或验证入口，userId 在密码验证场景传入
+// StartAuth initiates an OAuth login or password-verification flow. userId is set for password-verification.
 func (l OAuthLogic) StartAuth(c *gin.Context, req any, userId uint) (data any, rspError any) {
 	r, ok := req.(*request.OAuthStartReq)
 	if !ok {
@@ -276,7 +278,7 @@ func (l OAuthLogic) StartAuth(c *gin.Context, req any, userId uint) (data any, r
 	return response.OAuthStartRsp{AuthUrl: authUrl, State: state, ConnectorID: connector.ID, Provider: connector.Provider}, nil
 }
 
-// Callback 统一回调入口
+// Callback is the unified OAuth callback handler.
 func (l OAuthLogic) Callback(c *gin.Context, auth *jwt.GinJWTMiddleware, provider, code, state string) (*oauthCallbackResult, any) {
 	rawState, ok := oauthStateCache.Get(state)
 	if !ok {
@@ -415,7 +417,7 @@ func (l OAuthLogic) connectorToItem(conn *model.OAuthConnector, includeConfig bo
 		_ = stdjson.Unmarshal(conn.Config, &cfg)
 		item.Config = cfg
 
-		// 管理接口才返回 webhooks
+		// Only return webhooks for the admin API
 		var webhookItems []response.OAuthWebhookItem
 		for _, wh := range conn.Webhooks {
 			var events, fields []string
@@ -443,7 +445,7 @@ func validateConnectorConfig(conn *model.OAuthConnector) error {
 	return provider.ValidateConfig(conn)
 }
 
-// normalizeConnectorConfig 支持前端传入 {encoded: base64(json)} 或直接 map
+// normalizeConnectorConfig accepts either {encoded: base64(json)} or a plain map from the frontend.
 func normalizeConnectorConfig(raw map[string]any) (map[string]any, error) {
 	if raw == nil {
 		return map[string]any{}, nil
@@ -486,7 +488,7 @@ func (l OAuthLogic) ensureUserFromOAuth(profile *oauthprovider.OAuthUserProfile,
 		if err := common.DB.Model(user).Updates(updates).Error; err != nil {
 			return nil, "", tools.NewMySqlError(fmt.Errorf("更新用户来源失败: %v", err))
 		}
-		return user, "", nil // 已存在用户不返回密码
+		return user, "", nil // existing user, no password returned
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, "", tools.NewMySqlError(fmt.Errorf("查询用户失败: %v", err))
@@ -505,7 +507,7 @@ func (l OAuthLogic) ensureUserFromOAuth(profile *oauthprovider.OAuthUserProfile,
 		return nil, "", tools.NewValidatorError(fmt.Errorf("获取默认部门失败: %v", err))
 	}
 
-	// 拼接部门名称，防止 CommonAddUser 里 fallback 成 "默认:研发中心"
+	// Build department name string to prevent CommonAddUser from falling back to a default
 	var deptNames []string
 	for _, g := range groups {
 		if g.GroupName != "" {
@@ -549,10 +551,10 @@ func (l OAuthLogic) ensureUserFromOAuth(profile *oauthprovider.OAuthUserProfile,
 		return nil, "", err
 	}
 
-	// 触发用户创建事件（异步推送 webhook）
+	// Fire user-created event (async webhook push)
 	webhook.Fire(webhook.EventUserCreated, connector.ID, connector.Provider, newUser)
 
-	return newUser, randomPass, nil // 新用户返回随机密码
+	return newUser, randomPass, nil // new user, return generated password
 }
 
 func parseDefaultRoles(connector *model.OAuthConnector) ([]uint, error) {
@@ -590,13 +592,13 @@ func logOAuthProfile(profile *oauthprovider.OAuthUserProfile, connector *model.O
 	common.Log.Debugf("OAuth profile dump: provider=%s connectorID=%d profile=%+v err=%v", connector.Provider, connector.ID, profile, err)
 }
 
-// saveWebhooks 保存连接器的 webhook 列表（先删旧，再插新）
+// saveWebhooks replaces a connector's webhook list (delete old, insert new).
 func saveWebhooks(connectorID uint, reqs []request.OAuthWebhookReq) error {
-	// 删除旧的
+	// Delete old webhooks
 	if err := common.DB.Where("oauth_connector_id = ?", connectorID).Delete(&model.OAuthWebhook{}).Error; err != nil {
 		return err
 	}
-	// 插入新的
+	// Insert new webhooks
 	for _, req := range reqs {
 		eventsJSON, _ := stdjson.Marshal(req.Events)
 		fieldsJSON, _ := stdjson.Marshal(req.Fields)

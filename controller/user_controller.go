@@ -9,13 +9,13 @@ import (
 
 type UserController struct{}
 
-// Add 添加用户记录
-// @Summary 添加用户记录
-// @Description 添加用户记录
-// @Tags 用户管理
+// Add creates a new user record.
+// @Summary Add user
+// @Description Add a new user record
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.UserAddReq true "添加用户记录的结构体"
+// @Param  data body request.UserAddReq true "User creation request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/add [post]
 // @Security ApiKeyAuth
@@ -26,13 +26,13 @@ func (m *UserController) Add(c *gin.Context) {
 	})
 }
 
-// Update 更新用户记录
-// @Summary 更新用户记录
-// @Description 添加用户记录
-// @Tags 用户管理
+// Update modifies an existing user record.
+// @Summary Update user
+// @Description Update an existing user record
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.UserUpdateReq true "更改用户记录的结构体"
+// @Param  data body request.UserUpdateReq true "User update request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/update [post]
 // @Security ApiKeyAuth
@@ -43,10 +43,10 @@ func (m *UserController) Update(c *gin.Context) {
 	})
 }
 
-// List 记录列表
-// @Summary 获取所有用户记录列表
-// @Description 获取所有用户记录列表
-// @Tags 用户管理
+// List retrieves all user records.
+// @Summary List users
+// @Description Retrieve all user records
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -59,13 +59,13 @@ func (m *UserController) List(c *gin.Context) {
 	})
 }
 
-// Delete 删除用户记录
-// @Summary 删除用户记录
-// @Description 删除用户记录
-// @Tags 用户管理
+// Delete removes a user record.
+// @Summary Delete user
+// @Description Delete a user record
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.UserDeleteReq true "删除用户记录的结构体ID"
+// @Param  data body request.UserDeleteReq true "User deletion request body with ID"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/delete [post]
 // @Security ApiKeyAuth
@@ -76,13 +76,13 @@ func (m UserController) Delete(c *gin.Context) {
 	})
 }
 
-// ChangePwd 更新密码
-// @Summary 更新密码
-// @Description 更新密码
-// @Tags 用户管理
+// ChangePwd changes a user's password.
+// @Summary Change password
+// @Description Change user password
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.UserChangePwdReq true "更改用户密码的结构体"
+// @Param  data body request.UserChangePwdReq true "Password change request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/changePwd [post]
 // @Security ApiKeyAuth
@@ -93,10 +93,10 @@ func (m UserController) ChangePwd(c *gin.Context) {
 	})
 }
 
-// SendPasswordChangeCode 发送修改密码验证码
-// @Summary 发送修改密码验证码
-// @Description 给当前登录用户发送修改密码验证码
-// @Tags 用户管理
+// SendPasswordChangeCode sends a verification code for password change.
+// @Summary Send password change verification code
+// @Description Send a verification code to the currently logged-in user for password change
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -109,13 +109,13 @@ func (m UserController) SendPasswordChangeCode(c *gin.Context) {
 	})
 }
 
-// ResetPassword 重置用户密码
-// @Summary 重置用户密码
-// @Description 重置用户密码为随机密码并发送邮件通知
-// @Tags 用户管理
+// ResetPassword resets a user's password.
+// @Summary Reset user password
+// @Description Reset user password to a random password and send email notification
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.UserResetPasswordReq true "重置用户密码的结构体"
+// @Param  data body request.UserResetPasswordReq true "Password reset request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/resetPassword [post]
 // @Security ApiKeyAuth
@@ -126,13 +126,13 @@ func (m UserController) ResetPassword(c *gin.Context) {
 	})
 }
 
-// ChangeUserStatus 更改用户状态
-// @Summary 更改用户状态
-// @Description 更改用户状态
-// @Tags 用户管理
+// ChangeUserStatus changes a user's status.
+// @Summary Change user status
+// @Description Change user status
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.UserChangeUserStatusReq true "更改用户状态的结构体"
+// @Param  data body request.UserChangeUserStatusReq true "User status change request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/changeUserStatus [post]
 // @Security ApiKeyAuth
@@ -143,10 +143,10 @@ func (m UserController) ChangeUserStatus(c *gin.Context) {
 	})
 }
 
-// GetUserInfo 获取当前登录用户信息
-// @Summary 获取当前登录用户信息
-// @Description 获取当前登录用户信息
-// @Tags 用户管理
+// GetUserInfo retrieves the current logged-in user's information.
+// @Summary Get current user info
+// @Description Retrieve the current logged-in user's information
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -159,10 +159,10 @@ func (uc UserController) GetUserInfo(c *gin.Context) {
 	})
 }
 
-// IssueSSHPubKey 为当前用户签发SSH证书
-// @Summary 为当前用户签发SSH证书
-// @Description 生成新的SSH密钥对并使用配置的CA签发用户证书
-// @Tags 用户管理
+// IssueSSHPubKey issues an SSH certificate for the current user.
+// @Summary Issue SSH certificate for current user
+// @Description Generate a new SSH key pair and issue a user certificate signed by the configured CA
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -175,10 +175,10 @@ func (m UserController) IssueSSHPubKey(c *gin.Context) {
 	})
 }
 
-// RevokeOriginalKeypair 撤销旧的SSH证书/密钥（占位，暂未实现）
-// @Summary 撤销旧的SSH证书/密钥
-// @Description 预留接口，用于广播或webhook撤销旧证书，暂未实现
-// @Tags 用户管理
+// RevokeOriginalKeypair revokes old SSH certificates/keys (placeholder, not yet implemented).
+// @Summary Revoke old SSH certificates/keys
+// @Description Reserved endpoint for broadcasting or webhook-based revocation of old certificates (not yet implemented)
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -191,13 +191,13 @@ func (m UserController) RevokeOriginalKeypair(c *gin.Context) {
 	})
 }
 
-// SyncDingTalkUsers 同步钉钉用户信息
-// @Summary 同步钉钉用户信息
-// @Description 同步钉钉用户信息
-// @Tags 用户管理
+// SyncDingTalkUsers synchronizes DingTalk user information.
+// @Summary Sync DingTalk users
+// @Description Synchronize DingTalk user information
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.SyncDingUserReq true "同步钉钉用户信息"
+// @Param  data body request.SyncDingUserReq true "DingTalk user sync request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/syncDingTalkUsers [post]
 // @Security ApiKeyAuth
@@ -208,13 +208,13 @@ func (uc UserController) SyncDingTalkUsers(c *gin.Context) {
 	})
 }
 
-// SyncWeComUsers 同步企业微信用户信息
-// @Summary 同步企业微信用户信息
-// @Description 同步企业微信用户信息
-// @Tags 用户管理
+// SyncWeComUsers synchronizes WeCom (Enterprise WeChat) user information.
+// @Summary Sync WeCom users
+// @Description Synchronize WeCom user information
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.SyncWeComUserReq true "同步企业微信用户信息"
+// @Param  data body request.SyncWeComUserReq true "WeCom user sync request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/syncWeComUsers [post]
 // @Security ApiKeyAuth
@@ -225,13 +225,13 @@ func (uc UserController) SyncWeComUsers(c *gin.Context) {
 	})
 }
 
-// SyncFeiShuUsers 同步飞书用户信息
-// @Summary 同步飞书用户信息
-// @Description 同步飞书用户信息
-// @Tags 用户管理
+// SyncFeiShuUsers synchronizes FeiShu (Lark) user information.
+// @Summary Sync FeiShu users
+// @Description Synchronize FeiShu user information
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.SyncFeiShuUserReq true "同步飞书用户信息"
+// @Param  data body request.SyncFeiShuUserReq true "FeiShu user sync request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/syncFeiShuUsers [post]
 // @Security ApiKeyAuth
@@ -242,13 +242,13 @@ func (uc UserController) SyncFeiShuUsers(c *gin.Context) {
 	})
 }
 
-// SyncOpenLdapUsers 同步ldap用户信息
-// @Summary 同步ldap用户信息
-// @Description 同步ldap用户信息
-// @Tags 用户管理
+// SyncOpenLdapUsers synchronizes OpenLDAP user information.
+// @Summary Sync OpenLDAP users
+// @Description Synchronize OpenLDAP user information
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.SyncOpenLdapUserReq true "同步ldap用户信息"
+// @Param  data body request.SyncOpenLdapUserReq true "OpenLDAP user sync request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/syncOpenLdapUsers [post]
 // @Security ApiKeyAuth
@@ -259,13 +259,13 @@ func (uc UserController) SyncOpenLdapUsers(c *gin.Context) {
 	})
 }
 
-// SyncSqlUsers 同步sql用户信息到ldap
-// @Summary 同步sql用户信息到ldap
-// @Description 同步sql用户信息到ldap
-// @Tags 用户管理
+// SyncSqlUsers synchronizes SQL user information to LDAP.
+// @Summary Sync SQL users to LDAP
+// @Description Synchronize SQL user information to LDAP
+// @Tags User Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.SyncSqlUserReq true "更改用户状态的结构体"
+// @Param  data body request.SyncSqlUserReq true "SQL user sync request body"
 // @Success 200 {object} response.ResponseBody
 // @Router /user/syncSqlUsers [post]
 // @Security ApiKeyAuth
