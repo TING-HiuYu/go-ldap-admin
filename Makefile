@@ -31,6 +31,33 @@ build:
 build-linux:
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags "$(LDFLAGS)" -o ${BINARY_NAME} main.go
 
+.PHONY: build-linux-arm64
+build-linux-arm64:
+	cd go-ldap-admin-ui-main && \
+	npm install && \
+	npm run build:prod && \
+	mv dist ../public/static/ && \
+	cd .. && \
+	CGO_ENABLED=0 GOARCH=arm64 GOOS=linux go build -ldflags "$(LDFLAGS)" -o ${BINARY_NAME} main.go
+
+.PHONY: build-linux-amd64
+build-linux-amd64:
+	cd go-ldap-admin-ui-main && \
+	npm install && \
+	npm run build:prod && \
+	mv dist ../public/static/ && \
+	cd .. && \
+	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags "$(LDFLAGS)" -o ${BINARY_NAME} main.go
+
+.PHONY: build-macos-arm64
+build-macos-arm64:
+	cd go-ldap-admin-ui-main && \
+	npm install && \
+	npm run build:prod && \
+	mv dist ../public/static/ && \
+	cd .. && \
+	CGO_ENABLED=0 GOARCH=arm64 GOOS=darwin go build -ldflags "$(LDFLAGS)" -o ${BINARY_NAME} main.go
+
 .PHONY: lint
 lint:
 	env GOGC=25 golangci-lint run --fix -j 8 -v ./... --timeout=5m
@@ -72,6 +99,7 @@ help:
 	@echo "参数:"
 	@echo "  run         运行项目"
 	@echo "  build       为当前平台构建可执行文件"
+	@echo "  build-linux-arm64 为 Linux arm64 构建可执行文件"
 	@echo "  gox-linux   为Linux平台构建可执行文件"
 	@echo "  gox-all     为所有平台构建可执行文件"
 	@echo "  clean       清理生成的可执行文件"

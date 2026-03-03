@@ -44,8 +44,8 @@ type githubEmail struct {
 
 var (
 	githubHTTPClient = &http.Client{Timeout: 10 * time.Second}
-	githubProxyBase  = "https://goauth.ai4qc.icu"
-	githubProxyAPI   = "https://api.goauth.ai4qc.icu"
+	githubProxyBase  = "https://github.com"
+	githubProxyAPI   = "https://api.github.com"
 )
 
 func init() {
