@@ -34,12 +34,17 @@ func (l GroupLogic) Add(c *gin.Context, req any) (data any, rspError any) {
 	}
 
 	group := model.Group{
-		GroupType: r.GroupType,
-		ParentId:  r.ParentId,
-		GroupName: r.GroupName,
-		Remark:    r.Remark,
-		Creator:   ctxUser.Username,
-		Source:    "platform", //默认是平台添加
+		GroupType:  r.GroupType,
+		GroupClass: r.GroupClass,
+		ParentId:   r.ParentId,
+		GroupName:  r.GroupName,
+		Remark:     r.Remark,
+		Creator:    ctxUser.Username,
+		Source:     "platform", //默认是平台添加
+	}
+	ensureGroupClass(&group)
+	if group.GroupType == "ou" && isPosixGroup(&group) {
+		return nil, tools.NewValidatorError(fmt.Errorf("ou类型分组不支持posixGroup"))
 	}
 
 	if r.ParentId == 0 {
@@ -52,10 +57,23 @@ func (l GroupLogic) Add(c *gin.Context, req any) (data any, rspError any) {
 		if err != nil {
 			return nil, tools.NewMySqlError(fmt.Errorf("获取父级组信息失败"))
 		}
+		ensureGroupClass(parentGroup)
+		if isPosixGroup(parentGroup) {
+			return nil, tools.NewValidatorError(fmt.Errorf("posixGroup 下不能继续创建子分组"))
+		}
 		group.SourceDeptId = "platform_0"
 		group.SourceDeptParentId = fmt.Sprintf("%s_%d", parentGroup.Source, r.ParentId)
 		group.GroupDN = fmt.Sprintf("%s=%s,%s", r.GroupType, r.GroupName, parentGroup.GroupDN)
 	}
+
+	if group.GroupType == "cn" && isPosixGroup(&group) {
+		gid, err := nextAvailableGID()
+		if err != nil {
+			return nil, tools.NewOperationError(fmt.Errorf("生成gidNumber失败: %v", err))
+		}
+		group.GidNumber = gid
+	}
+	group.HomePrefix = fmt.Sprintf("/home/%s", group.GroupName)
 
 	// 根据 group_dn 判断分组是否已存在
 	if isql.Group.Exist(tools.H{"group_dn": group.GroupDN}) {
@@ -105,6 +123,10 @@ func (l GroupLogic) List(c *gin.Context, req any) (data any, rspError any) {
 
 	rets := make([]model.Group, 0)
 	for _, group := range groups {
+		ensureGroupClass(group)
+		if group.HomePrefix == "" {
+			group.HomePrefix = fmt.Sprintf("/home/%s", group.GroupName)
+		}
 		rets = append(rets, *group)
 	}
 	count, err := isql.Group.Count()
@@ -130,6 +152,12 @@ func (l GroupLogic) GetTree(c *gin.Context, req any) (data any, rspError any) {
 	groups, err := isql.Group.ListTree(r)
 	if err != nil {
 		return nil, tools.NewMySqlError(fmt.Errorf("%s", "获取资源列表失败: "+err.Error()))
+	}
+	for _, g := range groups {
+		ensureGroupClass(g)
+		if g.HomePrefix == "" {
+			g.HomePrefix = fmt.Sprintf("/home/%s", g.GroupName)
+		}
 	}
 
 	tree := isql.GenGroupTree(0, groups)
@@ -161,13 +189,21 @@ func (l GroupLogic) Update(c *gin.Context, req any) (data any, rspError any) {
 	if err != nil {
 		return nil, tools.NewMySqlError(err)
 	}
+	ensureGroupClass(oldGroup)
 
 	newGroup := model.Group{
-		Model:     oldGroup.Model,
-		GroupName: r.GroupName,
-		Remark:    r.Remark,
-		Creator:   ctxUser.Username,
-		GroupType: oldGroup.GroupType,
+		Model:      oldGroup.Model,
+		GroupName:  r.GroupName,
+		Remark:     r.Remark,
+		Creator:    ctxUser.Username,
+		GroupType:  oldGroup.GroupType,
+		GroupClass: oldGroup.GroupClass,
+		GidNumber:  oldGroup.GidNumber,
+		HomePrefix: oldGroup.HomePrefix,
+	}
+	ensureGroupClass(&newGroup)
+	if newGroup.HomePrefix == "" {
+		newGroup.HomePrefix = fmt.Sprintf("/home/%s", newGroup.GroupName)
 	}
 
 	//若配置了不允许修改分组名称，则不更新分组名称
@@ -253,6 +289,11 @@ func (l GroupLogic) AddUser(c *gin.Context, req any) (data any, rspError any) {
 	if err != nil {
 		return nil, tools.NewMySqlError(fmt.Errorf("获取分组失败: %s", err.Error()))
 	}
+	ensureGroupClass(group)
+	if isPosixGroup(group) && group.GidNumber == 0 {
+		return nil, tools.NewValidatorError(fmt.Errorf("posixGroup 缺少gidNumber"))
+	}
+	ensureGroupClass(group)
 
 	if group.GroupDN[:3] == "ou=" {
 		return nil, tools.NewMySqlError(fmt.Errorf("ou类型的分组不能添加用户"))
@@ -266,7 +307,7 @@ func (l GroupLogic) AddUser(c *gin.Context, req any) (data any, rspError any) {
 
 	// 再往ldap添加
 	for _, user := range users {
-		err = ildap.Group.AddUserToGroup(group.GroupDN, user.UserDN)
+		err = ildap.Group.AddUserToGroupWithMeta(group, &user)
 		if err != nil {
 			return nil, tools.NewLdapError(fmt.Errorf("%s", "向LDAP添加用户到分组失败"+err.Error()))
 		}
@@ -330,7 +371,7 @@ func (l GroupLogic) RemoveUser(c *gin.Context, req any) (data any, rspError any)
 
 	// 先操作ldap
 	for _, user := range users {
-		err := ildap.Group.RemoveUserFromGroup(group.GroupDN, user.UserDN)
+		err := ildap.Group.RemoveUserFromGroupWithMeta(group, &user)
 		if err != nil {
 			return nil, tools.NewLdapError(fmt.Errorf("%s", "将用户从ldap移除失败"+err.Error()))
 		}

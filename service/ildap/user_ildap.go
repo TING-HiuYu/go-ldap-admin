@@ -2,6 +2,8 @@ package ildap
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/eryajf/go-ldap-admin/config"
 	"github.com/eryajf/go-ldap-admin/model"
@@ -16,19 +18,34 @@ type UserService struct{}
 // 创建资源
 func (x UserService) Add(user *model.User) error {
 	add := ldap.NewAddRequest(user.UserDN, nil)
-	add.Attribute("objectClass", []string{"inetOrgPerson"})
+	add.Attribute("objectClass", buildUserObjectClasses(user))
 	add.Attribute("cn", []string{user.Username})
 	add.Attribute("sn", []string{user.Nickname})
 	add.Attribute("businessCategory", []string{user.Departments})
-	add.Attribute("departmentNumber", []string{user.Position})
+	deptNo := normalizeNumeric(user.Position)
+	add.Attribute("departmentNumber", []string{deptNo})
 	add.Attribute("description", []string{user.Introduction})
 	add.Attribute("displayName", []string{user.Nickname})
 	add.Attribute("mail", []string{user.Mail})
-	add.Attribute("employeeNumber", []string{user.JobNumber})
+	empNo := normalizeNumeric(user.JobNumber)
+	add.Attribute("employeeNumber", []string{empNo})
 	add.Attribute("givenName", []string{user.GivenName})
 	add.Attribute("postalAddress", []string{user.PostalAddress})
-	add.Attribute("mobile", []string{user.Mobile})
+	mobile := normalizeNumeric(user.Mobile)
+	add.Attribute("mobile", []string{mobile})
 	add.Attribute("uid", []string{user.Username})
+	if user.UidNumber > 0 {
+		add.Attribute("uidNumber", []string{fmt.Sprintf("%d", user.UidNumber)})
+	}
+	if user.GidNumber > 0 {
+		add.Attribute("gidNumber", []string{fmt.Sprintf("%d", user.GidNumber)})
+	}
+	if user.HomeDirectory != "" {
+		add.Attribute("homeDirectory", []string{user.HomeDirectory})
+	}
+	if user.LoginShell != "" {
+		add.Attribute("loginShell", []string{user.LoginShell})
+	}
 	var pass string
 	if config.Conf.Ldap.UserPasswordEncryptionType == "clear" {
 		pass = tools.NewParPasswd(user.Password)
@@ -50,17 +67,33 @@ func (x UserService) Add(user *model.User) error {
 // Update 更新资源
 func (x UserService) Update(oldusername string, user *model.User) error {
 	modify := ldap.NewModifyRequest(user.UserDN, nil)
+	modify.Replace("objectClass", buildUserObjectClasses(user))
 	modify.Replace("cn", []string{user.Username})
 	modify.Replace("sn", []string{oldusername})
 	modify.Replace("businessCategory", []string{user.Departments})
-	modify.Replace("departmentNumber", []string{user.Position})
+	deptNo := normalizeNumeric(user.Position)
+	modify.Replace("departmentNumber", []string{deptNo})
 	modify.Replace("description", []string{user.Introduction})
 	modify.Replace("displayName", []string{user.Nickname})
 	modify.Replace("mail", []string{user.Mail})
-	modify.Replace("employeeNumber", []string{user.JobNumber})
+	empNo := normalizeNumeric(user.JobNumber)
+	modify.Replace("employeeNumber", []string{empNo})
 	modify.Replace("givenName", []string{user.GivenName})
 	modify.Replace("postalAddress", []string{user.PostalAddress})
-	modify.Replace("mobile", []string{user.Mobile})
+	mobile := normalizeNumeric(user.Mobile)
+	modify.Replace("mobile", []string{mobile})
+	if user.UidNumber > 0 {
+		modify.Replace("uidNumber", []string{fmt.Sprintf("%d", user.UidNumber)})
+	}
+	if user.GidNumber > 0 {
+		modify.Replace("gidNumber", []string{fmt.Sprintf("%d", user.GidNumber)})
+	}
+	if user.HomeDirectory != "" {
+		modify.Replace("homeDirectory", []string{user.HomeDirectory})
+	}
+	if user.LoginShell != "" {
+		modify.Replace("loginShell", []string{user.LoginShell})
+	}
 
 	// 获取 LDAP 连接
 	conn, err := common.GetLDAPConn()
@@ -78,6 +111,20 @@ func (x UserService) Update(oldusername string, user *model.User) error {
 		return conn.ModifyDN(modifyDn)
 	}
 	return nil
+}
+
+// normalizeNumeric ensures LDAP numeric-like attributes are valid; defaults to 0000 when empty or non-numeric.
+func normalizeNumeric(val string) string {
+	trimmed := strings.TrimSpace(val)
+	if trimmed == "" {
+		return "0000"
+	}
+	for _, r := range trimmed {
+		if r < '0' || r > '9' {
+			return "0000"
+		}
+	}
+	return trimmed
 }
 
 func (x UserService) Exist(filter map[string]any) (bool, error) {
@@ -173,6 +220,48 @@ func (x UserService) NewPwd(username string) (string, error) {
 		return "", fmt.Errorf("password modify failed for %s, err: %v", username, err)
 	}
 	return newpass.GeneratedPassword, nil
+}
+
+// ListUIDNumbers 返回LDAP中已存在的uidNumber集合
+func (x UserService) ListUIDNumbers() ([]uint, error) {
+	searchRequest := ldap.NewSearchRequest(
+		config.Conf.Ldap.BaseDN,
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		"(uidNumber=*)",
+		[]string{"uidNumber"},
+		nil,
+	)
+
+	conn, err := common.GetLDAPConn()
+	defer common.PutLADPConn(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	sr, err := conn.Search(searchRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	var rst []uint
+	for _, entry := range sr.Entries {
+		val := entry.GetAttributeValue("uidNumber")
+		if val == "" {
+			continue
+		}
+		if num, convErr := strconv.Atoi(val); convErr == nil && num > 0 {
+			rst = append(rst, uint(num))
+		}
+	}
+	return rst, nil
+}
+
+func buildUserObjectClasses(user *model.User) []string {
+	classes := []string{"inetOrgPerson", "top"}
+	if user.UidNumber > 0 || user.GidNumber > 0 || user.HomeDirectory != "" || user.LoginShell != "" {
+		classes = append(classes, "posixAccount")
+	}
+	return classes
 }
 
 func updatePasswordClear(udn, newpasswd string) error {

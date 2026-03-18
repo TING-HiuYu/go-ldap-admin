@@ -1,13 +1,27 @@
-# delelopment
+# deployment
 system:
   # 设定模式(debug/release/test,正式版改为release)
   mode: debug
   # url前缀
   url-path-prefix: api
+  # 监听类型
+  listen-type: socket # tcp or socket
   # 程序监听端口
   port: 8888
+  # socket文件路径，release部署请用这个
+  socket: /run/go-ldap-admin/go-ldap-admin.sock
+
   # 是否初始化数据(没有初始数据时使用, 已发布正式版改为false)
   init-data: true
+  # 是否允许用户自助申请SSH证书
+  issue-ssh-pubkey: true
+
+# ca证书相关配置，如果你不需要使用ca证书功能，可以乱填但别删掉，只会在issue-ssh-pubkey为true时才会使用到
+ca:
+  # OpenSSH CA私钥路径(默认读取运行目录下的ca.crt；如果放置私钥文件请改成对应路径)
+  ca-path: ca
+  # 证书过期前多少天提醒用户续期
+  certificate-valid-days: 3650
 
 logs:
   # 日志等级(-1:Debug, 0:Info, 1:Warn, 2:Error, 3:DPanic, 4:Panic, 5:Fatal, -1<=level<=5, 参照zap.level源码)
@@ -25,7 +39,7 @@ logs:
 
 database:
   # 数据库类型 mysql sqlite3
-  driver: mysql
+  driver: sqlite3
   # 数据库连接sqlite3数据文件的路径
   source: data/go-ldap-admin.db
 
@@ -81,7 +95,7 @@ email:
 # # ldap 配置
 ldap:
   # ldap服务器地址
-  url: ldap://localhost:389
+  url: ldap://127.0.0.1
   # ladp最大连接数设置
   max-conn: 10
   # ldap服务器基础DN
@@ -89,7 +103,7 @@ ldap:
   # ldap管理员DN
   admin-dn: "cn=admin,dc=eryajf,dc=net"
   # ldap管理员密码
-  admin-pass: "123456"
+  admin-pass: "eryajf"
   # ldap用户OU
   user-dn: "ou=people,dc=eryajf,dc=net"
   # ldap用户初始默认密码
@@ -102,6 +116,8 @@ ldap:
   user-password-encryption-type: "ssha"
   # 默认邮箱后缀
   default-email-suffix: "eryajf.net"
+  # 默认shell路径
+  default-login-shell: /bin/bash
   # 是否开启同步功能，表示将该ldap中的数据同步到数据库，如果你是新建的，则保持false，页面上也不会展示同步按钮
   enable-sync: false
 # 📢 即便用不到如下三段配置信息，也不要删除，否则会有一些奇怪的错误出现

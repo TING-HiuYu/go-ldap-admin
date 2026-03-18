@@ -8,11 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// InitFieldRelationRoutes registers field relation routes with JWT and Casbin middleware.
 func InitFieldRelationRoutes(r *gin.RouterGroup, authMiddleware *jwt.GinJWTMiddleware) gin.IRoutes {
 	filed_relation := r.Group("/fieldrelation")
-	// 开启jwt认证中间件
+	// Enable JWT authentication middleware
 	filed_relation.Use(authMiddleware.MiddlewareFunc())
-	// 开启casbin鉴权中间件
+	// Enable Casbin authorization middleware
 	filed_relation.Use(middleware.CasbinMiddleware())
 	{
 		filed_relation.POST("/add", controller.FieldRelation.Add)

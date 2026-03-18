@@ -8,28 +8,31 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// 注册用户路由
+// InitUserRoutes registers user routes with JWT and Casbin middleware.
 func InitUserRoutes(r *gin.RouterGroup, authMiddleware *jwt.GinJWTMiddleware) gin.IRoutes {
 	user := r.Group("/user")
-	// 开启jwt认证中间件
+	// Enable JWT authentication middleware
 	user.Use(authMiddleware.MiddlewareFunc())
-	// 开启casbin鉴权中间件
+	// Enable Casbin authorization middleware
 	user.Use(middleware.CasbinMiddleware())
 	{
-		user.GET("/info", controller.User.GetUserInfo)                   // 暂时未完成
-		user.GET("/list", controller.User.List)                          // 用户列表
-		user.POST("/add", controller.User.Add)                           // 添加用户
-		user.POST("/update", controller.User.Update)                     // 更新用户
-		user.POST("/delete", controller.User.Delete)                     // 删除用户
-		user.POST("/changePwd", controller.User.ChangePwd)               // 修改用户密码
-		user.POST("/resetPassword", controller.User.ResetPassword)       // 重置用户密码
-		user.POST("/changeUserStatus", controller.User.ChangeUserStatus) // 修改用户状态
+		user.GET("/info", controller.User.GetUserInfo)                             // Get user info (not yet complete)
+		user.GET("/list", controller.User.List)                                    // List users
+		user.POST("/add", controller.User.Add)                                     // Add user
+		user.POST("/update", controller.User.Update)                               // Update user
+		user.POST("/delete", controller.User.Delete)                               // Delete user
+		user.POST("/changePwd", controller.User.ChangePwd)                         // Change user password
+		user.POST("/password/code", controller.User.SendPasswordChangeCode)        // Send password change verification code
+		user.POST("/issueSSHPubKey", controller.User.IssueSSHPubKey)               // Issue SSH certificate for current user
+		user.POST("/revokeOriginalKeypair", controller.User.RevokeOriginalKeypair) // Revoke old SSH certificate/key (placeholder)
+		user.POST("/resetPassword", controller.User.ResetPassword)                 // Reset user password
+		user.POST("/changeUserStatus", controller.User.ChangeUserStatus)           // Change user status
 
-		user.POST("/syncDingTalkUsers", controller.User.SyncDingTalkUsers) // 同步钉钉用户到平台
-		user.POST("/syncWeComUsers", controller.User.SyncWeComUsers)       // 同步企业微信用户到平台
-		user.POST("/syncFeiShuUsers", controller.User.SyncFeiShuUsers)     // 同步飞书用户到平台
-		user.POST("/syncOpenLdapUsers", controller.User.SyncOpenLdapUsers) // 同步Ldap用户到平台
-		user.POST("/syncSqlUsers", controller.User.SyncSqlUsers)           // 同步Sql用户到Ldap
+		user.POST("/syncDingTalkUsers", controller.User.SyncDingTalkUsers) // Sync DingTalk users to platform
+		user.POST("/syncWeComUsers", controller.User.SyncWeComUsers)       // Sync WeCom users to platform
+		user.POST("/syncFeiShuUsers", controller.User.SyncFeiShuUsers)     // Sync FeiShu users to platform
+		user.POST("/syncOpenLdapUsers", controller.User.SyncOpenLdapUsers) // Sync LDAP users to platform
+		user.POST("/syncSqlUsers", controller.User.SyncSqlUsers)           // Sync SQL users to LDAP
 	}
 	return r
 }

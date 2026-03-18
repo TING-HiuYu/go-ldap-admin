@@ -35,6 +35,8 @@ func dbAutoMigrate() {
 		&model.Api{},
 		&model.OperationLog{},
 		&model.FieldRelation{},
+		&model.OAuthConnector{},
+		&model.OAuthWebhook{},
 	)
 }
 

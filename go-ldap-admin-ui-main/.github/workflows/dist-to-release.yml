@@ -1,0 +1,41 @@
+name: Build Release
+
+on:
+  release:
+    types: [created,published] # 表示在创建新的 Release 时触发
+
+env: # 设置环境变量
+  TZ: Asia/Shanghai # 时区（设置时区可使页面中的`最近更新时间`使用时区时间）
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v5
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v5
+
+      - name: build project ⚗️
+        uses: actions/setup-node@v5
+        with:
+          node-version: 14
+          cache: 'npm'
+          cache-dependency-path: "package-lock.json"
+
+      - run: |
+          sed -i 's@http://localhost:8888/@/@g' .env.production
+          git config --global url."https://".insteadOf git://
+          npm install
+          yarn build:prod
+
+      - run: |
+          zip -q -r dist.zip dist
+          openssl md5 dist.zip > dist.zip.md5
+
+      - name: Upload release package
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist.zip
+            dist.zip.md5

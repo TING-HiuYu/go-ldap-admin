@@ -9,9 +9,10 @@ import (
 
 type MenuController struct{}
 
-// GetTree 菜单树
-// @Summary 获取菜单树
-// @Tags 菜单管理
+// GetTree retrieves the menu tree.
+// @Summary Get menu tree
+// @Description Retrieve the full menu tree
+// @Tags Menu Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -24,12 +25,13 @@ func (m *MenuController) GetTree(c *gin.Context) {
 	})
 }
 
-// GetAccessTree GetUserMenuTreeByUserId 获取用户菜单树
-// @Summary 获取用户菜单树
-// @Tags 菜单管理
+// GetAccessTree retrieves the user menu tree by user ID.
+// @Summary Get user menu tree
+// @Description Retrieve the menu tree accessible by a specific user
+// @Tags Menu Management
 // @Accept application/json
 // @Produce application/json
-// @Param id query int true "分组ID"
+// @Param id query int true "User ID"
 // @Success 200 {object} response.ResponseBody
 // @Router /menu/access/tree [get]
 // @Security ApiKeyAuth
@@ -40,12 +42,13 @@ func (m *MenuController) GetAccessTree(c *gin.Context) {
 	})
 }
 
-// Add 新建
-// @Summary 新建菜单
-// @Tags 菜单管理
+// Add creates a new menu.
+// @Summary Create a menu
+// @Description Create a new menu entry
+// @Tags Menu Management
 // @Accept application/json
 // @Produce application/json
-// @Param data body request.MenuAddReq true "新建菜单"
+// @Param data body request.MenuAddReq true "Menu creation request"
 // @Success 200 {object} response.ResponseBody
 // @Router /menu/add [post]
 // @Security ApiKeyAuth
@@ -56,12 +59,13 @@ func (m *MenuController) Add(c *gin.Context) {
 	})
 }
 
-// Update 更新记录
-// @Summary 更新菜单
-// @Tags 菜单管理
+// Update updates an existing menu.
+// @Summary Update a menu
+// @Description Update an existing menu entry
+// @Tags Menu Management
 // @Accept application/json
 // @Produce application/json
-// @Param data body request.MenuUpdateReq true "更新菜单"
+// @Param data body request.MenuUpdateReq true "Menu update request"
 // @Success 200 {object} response.ResponseBody
 // @Router /menu/update [post]
 // @Security ApiKeyAuth
@@ -72,12 +76,13 @@ func (m *MenuController) Update(c *gin.Context) {
 	})
 }
 
-// Delete 删除记录
-// @Summary 删除菜单
-// @Tags 菜单管理
+// Delete deletes an existing menu.
+// @Summary Delete a menu
+// @Description Delete an existing menu entry
+// @Tags Menu Management
 // @Accept application/json
 // @Produce application/json
-// @Param data body request.MenuDeleteReq true "删除菜单"
+// @Param data body request.MenuDeleteReq true "Menu deletion request"
 // @Success 200 {object} response.ResponseBody
 // @Router /menu/delete [post]
 // @Security ApiKeyAuth

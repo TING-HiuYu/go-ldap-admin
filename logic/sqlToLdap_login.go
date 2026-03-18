@@ -57,7 +57,7 @@ func (d *SqlLogic) SyncSqlUsers(c *gin.Context, req any) (data any, rspError any
 		}
 		for _, group := range groups {
 			//根据选择的部门，添加到部门内
-			err = ildap.Group.AddUserToGroup(group.GroupDN, user.UserDN)
+			err = ildap.Group.AddUserToGroupWithMeta(group, &user)
 			if err != nil {
 				errMsg := fmt.Sprintf("向Ldap添加用户[%s]到分组[%s]失败：%s", user.Username, group.GroupName, err.Error())
 				common.Log.Errorf("SyncSqlUsers: %s", errMsg)
@@ -103,6 +103,17 @@ func (d *SqlLogic) SyncSqlGroups(c *gin.Context, req any) (data any, rspError an
 	}
 	// 2.再将分组添加到ldap
 	for _, group := range groups {
+		ensureGroupClass(group)
+		if isPosixGroup(group) && group.GidNumber == 0 {
+			var gid uint
+			gid, err = nextAvailableGID()
+			if err != nil {
+				errMsg := fmt.Sprintf("同步分组[%s]失败，生成gidNumber异常：%s", group.GroupName, err.Error())
+				common.Log.Errorf("SyncSqlGroups: %s", errMsg)
+				return nil, tools.NewOperationError(errors.New(errMsg))
+			}
+			group.GidNumber = gid
+		}
 		err = ildap.Group.Add(group)
 		if err != nil {
 			errMsg := fmt.Sprintf("向LDAP同步分组[%s]失败：%s", group.GroupName, err.Error())
@@ -114,7 +125,7 @@ func (d *SqlLogic) SyncSqlGroups(c *gin.Context, req any) (data any, rspError an
 				if user.UserDN == config.Conf.Ldap.AdminDN {
 					continue
 				}
-				err = ildap.Group.AddUserToGroup(group.GroupDN, user.UserDN)
+				err = ildap.Group.AddUserToGroupWithMeta(group, user)
 				if err != nil {
 					errMsg := fmt.Sprintf("同步分组[%s]之后处理分组内的用户[%s]失败：%s", group.GroupName, user.Username, err.Error())
 					common.Log.Errorf("SyncSqlGroups: %s", errMsg)

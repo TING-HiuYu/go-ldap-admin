@@ -24,3 +24,16 @@ dist
 data
 bin
 .worktrees
+
+# Sensitive files
+config.yml
+ca.crt
+
+# Build and deployment scripts
+git_push.sh
+
+# Backup and example files
+*.bak
+*.example
+ca.pub
+ca

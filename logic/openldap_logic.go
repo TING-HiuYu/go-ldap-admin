@@ -35,9 +35,12 @@ func (d *OpenLdapLogic) SyncOpenLdapDepts(c *gin.Context, req any) (data any, rs
 		groups = append(groups, &model.Group{
 			GroupName:          dept.Name,
 			Remark:             dept.Remark,
+			GroupType:          dept.GroupType,
 			SourceDeptId:       dept.Id,
 			SourceDeptParentId: dept.ParentId,
 			GroupDN:            dept.DN,
+			GroupClass:         dept.GroupClass,
+			GidNumber:          dept.GidNumber,
 		})
 	}
 	// 2.将远程数据转换成树
@@ -82,7 +85,13 @@ func (d OpenLdapLogic) AddDepts(group *model.Group) error {
 	if !isql.Group.Exist(tools.H{"group_dn": group.GroupDN}) {
 		// 此时的 group 已经附带了Build后动态关联好的字段，接下来将一些确定性的其他字段值添加上，就可以创建这个分组了
 		group.Creator = "system"
-		group.GroupType = strings.Split(strings.Split(group.GroupDN, ",")[0], "=")[0]
+		if group.GroupType == "" {
+			group.GroupType = strings.Split(strings.Split(group.GroupDN, ",")[0], "=")[0]
+		}
+		ensureGroupClass(group)
+		if group.HomePrefix == "" {
+			group.HomePrefix = fmt.Sprintf("/home/%s", group.GroupName)
+		}
 		parentid, err := d.getParentGroupID(group)
 		if err != nil {
 			return err
@@ -162,6 +171,10 @@ func (d OpenLdapLogic) SyncOpenLdapUsers(c *gin.Context, req any) (data any, rsp
 			DepartmentId:  tools.SliceToString(groupIds, ","),
 			SourceUserId:  staff.Name,
 			SourceUnionId: staff.Name,
+			UidNumber:     staff.UidNumber,
+			GidNumber:     staff.GidNumber,
+			HomeDirectory: staff.HomeDirectory,
+			LoginShell:    staff.LoginShell,
 			Roles:         roles,
 			UserDN:        staff.DN,
 		})

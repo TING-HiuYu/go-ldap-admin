@@ -7,13 +7,14 @@ type UserAddReq struct {
 	Nickname      string `json:"nickname" validate:"required,min=0,max=50"`
 	GivenName     string `json:"givenName" validate:"min=0,max=50"`
 	Mail          string `json:"mail" validate:"required,min=0,max=100"`
-	JobNumber     string `json:"jobNumber" validate:"required,min=0,max=20"`
+	JobNumber     string `json:"jobNumber" validate:"omitempty,min=0,max=20"`
 	PostalAddress string `json:"postalAddress" validate:"min=0,max=255"`
 	Departments   string `json:"departments" validate:"min=0,max=512"`
 	Position      string `json:"position" validate:"min=0,max=128"`
-	Mobile        string `json:"mobile" validate:"required,checkMobile"`
+	Mobile        string `json:"mobile" validate:"omitempty,checkMobile"`
 	Avatar        string `json:"avatar"`
 	Introduction  string `json:"introduction" validate:"min=0,max=255"`
+	LoginShell    string `json:"loginShell" validate:"omitempty,min=0,max=64"`
 	Status        uint   `json:"status" validate:"oneof=1 2"`
 	DepartmentId  []uint `json:"departmentId" validate:"required"`
 	Source        string `json:"source" validate:"min=0,max=50"`
@@ -27,13 +28,14 @@ type DingUserAddReq struct {
 	Nickname      string `json:"nickname" validate:"required,min=0,max=50"`
 	GivenName     string `json:"givenName" validate:"min=0,max=50"`
 	Mail          string `json:"mail" validate:"required,min=0,max=100"`
-	JobNumber     string `json:"jobNumber" validate:"required,min=0,max=20"`
+	JobNumber     string `json:"jobNumber" validate:"omitempty,min=0,max=20"`
 	PostalAddress string `json:"postalAddress" validate:"min=0,max=255"`
 	Departments   string `json:"departments" validate:"min=0,max=512"`
 	Position      string `json:"position" validate:"min=0,max=128"`
-	Mobile        string `json:"mobile" validate:"required,checkMobile"`
+	Mobile        string `json:"mobile" validate:"omitempty,checkMobile"`
 	Avatar        string `json:"avatar"`
 	Introduction  string `json:"introduction" validate:"min=0,max=255"`
+	LoginShell    string `json:"loginShell" validate:"omitempty,min=0,max=64"`
 	Status        uint   `json:"status" validate:"oneof=1 2"`
 	DepartmentId  []uint `json:"departmentId" validate:"required"`
 	Source        string `json:"source" validate:"min=0,max=50"`
@@ -71,13 +73,14 @@ type UserUpdateReq struct {
 	Nickname      string `json:"nickname" validate:"min=0,max=20"`
 	GivenName     string `json:"givenName" validate:"min=0,max=50"`
 	Mail          string `json:"mail" validate:"min=0,max=100"`
-	JobNumber     string `json:"jobNumber" validate:"min=0,max=20"`
+	JobNumber     string `json:"jobNumber" validate:"omitempty,min=0,max=20"`
 	PostalAddress string `json:"postalAddress" validate:"min=0,max=255"`
 	Departments   string `json:"departments" validate:"min=0,max=512"`
 	Position      string `json:"position" validate:"min=0,max=128"`
-	Mobile        string `json:"mobile" validate:"checkMobile"`
+	Mobile        string `json:"mobile" validate:"omitempty,checkMobile"`
 	Avatar        string `json:"avatar"`
 	Introduction  string `json:"introduction" validate:"min=0,max=255"`
+	LoginShell    string `json:"loginShell" validate:"omitempty,min=0,max=64"`
 	DepartmentId  []uint `json:"departmentId" validate:"required"`
 	Source        string `json:"source" validate:"min=0,max=50"`
 	RoleIds       []uint `json:"roleIds" validate:"required"`
@@ -94,6 +97,9 @@ type UserChangePwdReq struct {
 	NewPassword string `json:"newPassword" validate:"required"`
 }
 
+// UserSendPasswordCodeReq 请求发送修改密码验证码
+type UserSendPasswordCodeReq struct{}
+
 // UserResetPasswordReq 重置密码结构体
 type UserResetPasswordReq struct {
 	Username string `json:"username" validate:"required"`
@@ -103,6 +109,14 @@ type UserResetPasswordReq struct {
 type UserChangeUserStatusReq struct {
 	ID     uint `json:"id" validate:"required"`
 	Status uint `json:"status" validate:"oneof=1 2"`
+}
+
+// UserIssueSSHPubKeyReq 自助申请SSH证书
+type UserIssueSSHPubKeyReq struct {
+}
+
+// UserRevokeOriginalKeypairReq 撤销旧SSH证书/密钥（占位）
+type UserRevokeOriginalKeypairReq struct {
 }
 
 // UserGetUserInfoReq 获取用户信息结构体
