@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 export default {
   props: {
@@ -82,34 +82,45 @@ export default {
       this.loading = true
       return new Promise((resolve, reject) => {
         const reader = new FileReader()
-        reader.onload = e => {
-          const data = e.target.result
-          const workbook = XLSX.read(data, { type: 'array' })
-          const firstSheetName = workbook.SheetNames[0]
-          const worksheet = workbook.Sheets[firstSheetName]
-          const header = this.getHeaderRow(worksheet)
-          const results = XLSX.utils.sheet_to_json(worksheet)
-          this.generateData({ header, results })
-          this.loading = false
-          resolve()
+        reader.onload = async e => {
+          try {
+            const workbook = new ExcelJS.Workbook()
+            await workbook.xlsx.load(e.target.result)
+            const worksheet = workbook.getWorksheet(1)
+            const header = this.getHeaderRow(worksheet)
+            const results = this.getSheetData(worksheet, header)
+            this.generateData({ header, results })
+            this.loading = false
+            resolve()
+          } catch (err) {
+            this.loading = false
+            reject(err)
+          }
         }
         reader.readAsArrayBuffer(rawFile)
       })
     },
-    getHeaderRow(sheet) {
+    getHeaderRow(worksheet) {
       const headers = []
-      const range = XLSX.utils.decode_range(sheet['!ref'])
-      let C
-      const R = range.s.r
-      /* start in the first row */
-      for (C = range.s.c; C <= range.e.c; ++C) { /* walk every column in the range */
-        const cell = sheet[XLSX.utils.encode_cell({ c: C, r: R })]
-        /* find the cell in the first row */
-        let hdr = 'UNKNOWN ' + C // <-- replace with your desired default
-        if (cell && cell.t) hdr = XLSX.utils.format_cell(cell)
-        headers.push(hdr)
-      }
+      const firstRow = worksheet.getRow(1)
+      firstRow.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+        const val = cell.value
+        headers.push(val !== null && val !== undefined ? String(val) : 'UNKNOWN ' + (colNumber - 1))
+      })
       return headers
+    },
+    getSheetData(worksheet, header) {
+      const results = []
+      worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return // skip header row
+        const rowData = {}
+        header.forEach((key, index) => {
+          const cell = row.getCell(index + 1)
+          rowData[key] = cell.value
+        })
+        results.push(rowData)
+      })
+      return results
     },
     isExcel(file) {
       return /\.(xlsx|xls|csv)$/.test(file.name)
@@ -117,6 +128,7 @@ export default {
   }
 }
 </script>
+
 
 <style scoped>
 .excel-upload-input{
