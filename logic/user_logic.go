@@ -650,6 +650,7 @@ func (l UserLogic) IssueSSHPubKey(c *gin.Context, req any) (data any, rspError a
 			"permit-X11-forwarding":   "",
 			"permit-agent-forwarding": "",
 			"permit-port-forwarding":  "",
+			"permit-user-rc":          "",
 		}},
 	}
 
