@@ -121,6 +121,13 @@ func (s UserService) Count() (int64, error) {
 	return count, err
 }
 
+// ListUIDNumbers 返回数据库中已分配的uidNumber
+func (s UserService) ListUIDNumbers() ([]uint, error) {
+	var uids []uint
+	err := common.DB.Model(&model.User{}).Where("uid_number > 0").Pluck("uid_number", &uids).Error
+	return uids, err
+}
+
 // Exist 判断资源是否存在
 func (s UserService) Exist(filter map[string]any) bool {
 	var dataObj model.User

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/eryajf/go-ldap-admin/config"
 	"github.com/eryajf/go-ldap-admin/model"
@@ -97,10 +98,33 @@ func login(c *gin.Context) (any, error) {
 // 用户登录校验成功处理
 func authorizator(data any, c *gin.Context) bool {
 	if v, ok := data.(tools.H); ok {
-		userStr := v["user"].(string)
+		userVal, ok := v["user"]
+		userStr, okCast := userVal.(string)
 		var user model.User
-		// 将用户json转为结构体
-		tools.Json2Struct(userStr, &user)
+		if ok && okCast && strings.TrimSpace(userStr) != "" {
+			// 将用户json转为结构体
+			tools.Json2Struct(userStr, &user)
+		} else {
+			// 兼容缺少 user 字段但带 identity 的 token
+			if idVal, exists := v[jwt.IdentityKey]; exists {
+				switch id := idVal.(type) {
+				case float64:
+					user.ID = uint(id)
+				case int:
+					user.ID = uint(id)
+				case uint:
+					user.ID = id
+				}
+			}
+			if user.ID == 0 {
+				return false
+			}
+			found, err := isql.User.GetUserById(user.ID)
+			if err != nil {
+				return false
+			}
+			user = found
+		}
 		// 将用户保存到context, api调用时取数据方便
 		c.Set("user", user)
 		return true

@@ -85,6 +85,13 @@ func (s GroupService) Count() (int64, error) {
 	return count, err
 }
 
+// ListGIDNumbers 返回数据库中已分配的gidNumber
+func (s GroupService) ListGIDNumbers() ([]uint, error) {
+	var gids []uint
+	err := common.DB.Model(&model.Group{}).Where("gid_number > 0").Pluck("gid_number", &gids).Error
+	return gids, err
+}
+
 // Add 添加资源
 func (s GroupService) Add(data *model.Group) error {
 	return common.DB.Create(data).Error

@@ -41,6 +41,11 @@ func CasbinMiddleware() gin.HandlerFunc {
 		obj := strings.TrimPrefix(c.FullPath(), "/"+config.Conf.System.UrlPathPrefix)
 		// 获取请求方式
 		act := c.Request.Method
+		// 允许所有已登录用户访问自助更新接口，后续有业务校验限制
+		if obj == "/user/update" && strings.EqualFold(act, "POST") {
+			c.Next()
+			return
+		}
 		isPass := check(subs, obj, act)
 		if !isPass {
 			tools.Response(c, 401, 401, nil, "没有权限")

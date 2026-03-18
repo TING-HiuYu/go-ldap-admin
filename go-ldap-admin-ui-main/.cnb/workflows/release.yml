@@ -1,0 +1,37 @@
+$:
+  tag_push:
+    - runner:
+        cpus: 8
+      services:
+        - docker
+        - git-clone-yyds
+      stages:
+        - name: 构建缓存镜像
+          type: docker:cache
+          options:
+            dockerfile: .cache.dockerfile
+            by:
+              - package.json
+              - package-lock.json
+            versionBy:
+              - package.json
+          exports:
+            name: DOCKER_CACHE_IMAGE_NAME
+        - name: 直接使用缓存镜像环境安装依赖并编译
+          image: $DOCKER_CACHE_IMAGE_NAME
+          script: |
+            ln -snf $NODE_PATH node_modules
+            time npm install
+            sed -i 's@http://localhost:8888/@/@g' .env.production
+            time yarn build:prod
+        - name: 📦 构建制品
+          image: docker.cnb.cool/znb/images/debian
+          script: |
+            zip -q -r dist.zip dist
+            openssl md5 dist.zip > dist.zip.md5
+        - name: 🐋 推送制品
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - dist.zip
+              - dist.zip.md5

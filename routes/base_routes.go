@@ -7,20 +7,20 @@ import (
 )
 
 // LoginHandler
-// @Summary 登录接口 (手动加上: Bearer + token(密码加密接口))
-// @Description 用户登录
-// @Tags 基础管理
+// @Summary Login (manually add: Bearer + token (password encryption endpoint))
+// @Description User login
+// @Tags Base Management
 // @Accept application/json
 // @Produce application/json
-// @Param  data body request.RegisterAndLoginReq true "用户登录信息账号和密码"
+// @Param  data body request.RegisterAndLoginReq true "User login credentials (username and password)"
 // @Success 200 {object} response.ResponseBody
 // @Router /base/login [post]
 func LoginHandler() {}
 
 // LogoutHandler
-// @Summary 退出登录
-// @Description 用户退出登录
-// @Tags 基础管理
+// @Summary Logout
+// @Description User logout
+// @Tags Base Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -29,34 +29,36 @@ func LogoutHandler() {
 }
 
 // RefreshHandler
-// @Summary 刷新 Token
-// @Description 使用旧的 Token 获取新的 Token
-// @Tags 基础管理
+// @Summary Refresh Token
+// @Description Use an old Token to obtain a new Token
+// @Tags Base Management
 // @Accept application/json
 // @Produce application/json
-// @Param Authorization header string true "Bearer 旧的 Token"
+// @Param Authorization header string true "Bearer old Token"
 // @Success 200 {object} response.ResponseBody
 // @Router /base/refreshToken [post]
 func RefreshHandler() {
 
 }
 
-// 注册基础路由
+// InitBaseRoutes registers base routes that do not require JWT or Casbin middleware.
 func InitBaseRoutes(r *gin.RouterGroup, authMiddleware *jwt.GinJWTMiddleware) gin.IRoutes {
 	base := r.Group("/base")
 	{
 		base.GET("ping", controller.Demo)
-		base.GET("encryptpwd", controller.Base.EncryptPasswd) // 生成加密密码
-		base.GET("decryptpwd", controller.Base.DecryptPasswd) // 密码解密为明文
-		base.GET("config", controller.Base.GetConfig)         // 获取系统配置
-		base.GET("version", controller.Base.GetVersion)       // 获取版本信息
-		// 登录登出刷新token无需鉴权
+		base.GET("encryptpwd", controller.Base.EncryptPasswd) // Generate encrypted password
+		base.GET("decryptpwd", controller.Base.DecryptPasswd) // Decrypt password to plaintext
+		base.GET("config", controller.Base.GetConfig)         // Get system configuration
+		base.GET("version", controller.Base.GetVersion)       // Get version info
+		// Login, logout, and token refresh do not require authentication
 		base.POST("/login", authMiddleware.LoginHandler)
+		base.POST("/otp/send", controller.Base.SendLoginCode) // Send login verification code
+		base.POST("/otp/login", controller.Base.OtpLogin(authMiddleware))
 		base.POST("/logout", authMiddleware.LogoutHandler)
 		base.POST("/refreshToken", authMiddleware.RefreshHandler)
-		base.POST("/sendcode", controller.Base.SendCode)   // 给用户邮箱发送验证码
-		base.POST("/changePwd", controller.Base.ChangePwd) // 修改用户密码
-		base.GET("/dashboard", controller.Base.Dashboard)  // 系统首页展示数据
+		base.POST("/sendcode", controller.Base.SendCode)   // Send verification code to user email
+		base.POST("/changePwd", controller.Base.ChangePwd) // Change user password
+		base.GET("/dashboard", controller.Base.Dashboard)  // Dashboard data for system homepage
 	}
 	return r
 }

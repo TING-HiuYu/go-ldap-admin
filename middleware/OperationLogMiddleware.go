@@ -40,8 +40,12 @@ func OperationLogMiddleware() gin.HandlerFunc {
 			username = user.Username
 		}
 
-		// 获取访问路径
-		path := strings.TrimPrefix(c.FullPath(), "/"+config.Conf.System.UrlPathPrefix)
+		// 获取访问路径；FullPath 为空时直接跳过记录查询，避免空 path 查库
+		fullPath := c.FullPath()
+		if fullPath == "" {
+			return
+		}
+		path := strings.TrimPrefix(fullPath, "/"+config.Conf.System.UrlPathPrefix)
 		// 请求方式
 		method := c.Request.Method
 

@@ -9,10 +9,10 @@ import (
 
 type ApiController struct{}
 
-// List 记录列表
-// @Summary 获取API接口列表
-// Description: 获取API接口列表
-// @Tags 接口管理
+// List retrieves the paginated list of API endpoint records.
+// @Summary Get API endpoint list
+// @Description Retrieves the paginated list of API endpoint records
+// @Tags API Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -25,10 +25,10 @@ func (m *ApiController) List(c *gin.Context) {
 	})
 }
 
-// GetTree 接口树
-// @Summary 获取API接口树
-// Description: 获取API接口树
-// @Tags 接口管理
+// GetTree retrieves the API endpoint tree structure.
+// @Summary Get API endpoint tree
+// @Description Retrieves the tree structure of API endpoints
+// @Tags API Management
 // @Accept application/json
 // @Produce application/json
 // @Success 200 {object} response.ResponseBody
@@ -41,13 +41,13 @@ func (m *ApiController) GetTree(c *gin.Context) {
 	})
 }
 
-// Add 新建记录
-// @Summary 新建API接口
-// @Tags 接口管理
-// Description: 新建API接口
+// Add creates a new API endpoint record.
+// @Summary Create a new API endpoint
+// @Description Creates a new API endpoint record
+// @Tags API Management
 // @Accept application/json
 // @Produce application/json
-// @Param data body request.ApiAddReq true "新建API"
+// @Param data body request.ApiAddReq true "Create API endpoint"
 // @Success 200 {object} response.ResponseBody
 // @Router /api/add [post]
 // @Security ApiKeyAuth
@@ -58,13 +58,13 @@ func (m *ApiController) Add(c *gin.Context) {
 	})
 }
 
-// Update 更新记录
-// @Summary 更新API接口
-// @Tags 接口管理
-// Description: 更新API接口
+// Update modifies an existing API endpoint record.
+// @Summary Update an API endpoint
+// @Description Updates an existing API endpoint record
+// @Tags API Management
 // @Accept application/json
 // @Produce application/json
-// @Param data body request.ApiUpdateReq true "更新API"
+// @Param data body request.ApiUpdateReq true "Update API endpoint"
 // @Success 200 {object} response.ResponseBody
 // @Router /api/update [post]
 // @Security ApiKeyAuth
@@ -75,13 +75,13 @@ func (m *ApiController) Update(c *gin.Context) {
 	})
 }
 
-// Delete 删除记录
-// @Summary 删除API接口
-// @Tags 接口管理
-// Description: 删除API接口
+// Delete removes an API endpoint record.
+// @Summary Delete an API endpoint
+// @Description Deletes an existing API endpoint record
+// @Tags API Management
 // @Accept application/json
 // @Produce application/json
-// @Param data body request.ApiDeleteReq true "删除API"
+// @Param data body request.ApiDeleteReq true "Delete API endpoint"
 // @Success 200 {object} response.ResponseBody
 // @Router /api/delete [post]
 // @Security ApiKeyAuth

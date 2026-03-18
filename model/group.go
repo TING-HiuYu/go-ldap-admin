@@ -10,6 +10,8 @@ type Group struct {
 	Remark             string   `gorm:"type:varchar(128);comment:'分组中文说明'" json:"remark"`
 	Creator            string   `gorm:"type:varchar(20);comment:'创建人'" json:"creator"`
 	GroupType          string   `gorm:"type:varchar(20);comment:'分组类型：cn、ou'" json:"groupType"`
+	GroupClass         string   `gorm:"type:varchar(64);default:'groupOfUniqueNames';comment:'cn使用的objectClass'" json:"groupClass"`
+	GidNumber          uint     `gorm:"type:int;default:0;comment:'POSIX gidNumber'" json:"gidNumber"`
 	Users              []*User  `gorm:"many2many:group_users" json:"users"`
 	ParentId           uint     `gorm:"default:0;comment:'父组编号(编号为0时表示根组)'" json:"parentId"`
 	SourceDeptId       string   `gorm:"type:varchar(100);comment:'部门编号'" json:"sourceDeptId"`
@@ -19,6 +21,7 @@ type Group struct {
 	Children           []*Group `gorm:"-" json:"children"`
 	GroupDN            string   `gorm:"type:varchar(255);not null;comment:'分组dn'" json:"groupDn"`             // 分组在ldap的dn
 	SyncState          uint     `gorm:"type:tinyint(1);default:1;comment:'同步状态:1已同步, 2未同步'" json:"syncState"` // 数据到ldap的同步状态
+	HomePrefix         string   `gorm:"-" json:"homePrefix"`
 }
 
 func (g *Group) SetGroupName(groupName string) {
